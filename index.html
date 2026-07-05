@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B1017">
+<title>RT-SIM PRO — Respiratory Therapy Monitor & NBRC Trainer</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0B1017;
+  --bg2: #0f1620;
+  --panel: #141C26;
+  --panel2: #18212D;
+  --border: #2A3442;
+  --border2: #1e2a38;
+  --primary: #3B82F6;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --cyan: #06B6D4;
+  --purple: #8B5CF6;
+  --text: #F8FAFC;
+  --text2: #CBD5E1;
+  --muted: #64748B;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: #2a3442; border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ── TOPBAR ────────────────────────── */
+.topbar {
+  height: 42px; background: #0d1520; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; gap: 6px;
+  flex-shrink: 0; z-index: 30; overflow-x: auto;
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px;
+  letter-spacing: .05em; white-space: nowrap; border-right: 1px solid var(--border); padding-right: 12px; margin-right: 6px; }
+.brand-pulse { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: pulse-dot 1.4s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+.tb-sep { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+
+.tf-btn, .util-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 3px 8px;
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  color: #64748b; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.tf-btn:hover, .util-btn:hover { color: var(--text2); border-color: var(--border); }
+.tf-btn.active, .util-btn.active { background: #1e3a5f; border-color: #3B82F6; color: #93c5fd; }
+
+/* ── MAIN GRID ─────────────────────── */
+.app-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr 250px;
+  min-height: 640px;
+}
+@media (max-width: 1150px){ .app-grid{ grid-template-columns: 1fr; } }
+
+.sidebar { background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-left { border-right: 1px solid var(--border); }
+.sidebar-right { border-left: 1px solid var(--border); }
+.sidebar-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 12px; max-height: 900px; }
+
+.sec-hd {
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border2); padding-bottom: 5px; margin-bottom: 6px;
+}
+.sec-hd.indigo { color: #818cf8; } .sec-hd.amber { color: #fbbf24; } .sec-hd.sky { color: #38bdf8; }
+.sec-hd.green { color: #4ade80; } .sec-hd.rose { color: #fb7185; } .sec-hd.purple { color: #c084fc; }
+
+.d-card { background: #0d1520; border: 1px solid var(--border2); border-radius: 8px; padding: 10px; }
+
+.f-lbl { font-size: 9px; color: var(--muted); display: block; margin-bottom: 3px; }
+.f-inp, select.f-inp {
+  width: 100%; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 7px; color: var(--text2);
+  font-family: var(--mono); font-size: 11px; outline: none; transition: border-color .15s;
+}
+.f-inp:focus { border-color: var(--primary); }
+input[type=range].f-range { width: 100%; accent-color: var(--primary); height: 14px; }
+
+.ind-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #0f1a26; }
+.ind-row:last-child { border-bottom: none; }
+.ind-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ind-name { flex: 1; font-family: var(--mono); font-size: 10px; color: var(--text2); }
+.ind-val { font-family: var(--mono); font-size: 11px; font-weight: 700; text-align: right; min-width: 44px; }
+.ind-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; }
+.badge-ok { background: rgba(34,197,94,.15); color: #4ade80; }
+.badge-warn { background: rgba(245,158,11,.15); color: #fbbf24; }
+.badge-crit { background: rgba(239,68,68,.3); color: #ef4444; border: 1px solid #7f1d1d; animation: blink-border .7s infinite; }
+@keyframes blink-border { 0%,100%{border-color:#7f1d1d} 50%{border-color:#ef4444} }
+
+.math-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #0f1a26; font-family: var(--mono); font-size: 10px; }
+.math-row:last-child { border-bottom: none; }
+.math-lbl { color: var(--muted); }
+.math-val { font-weight: 700; }
+
+.abg-step { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #0f1a26; }
+.abg-step:last-child { border-bottom: none; }
+.step-circle { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; color: var(--muted); font-family: var(--mono); }
+.step-circle.active { border-color: var(--primary); color: #93c5fd; background: rgba(59,130,246,.1); }
+.step-body { flex: 1; min-width: 0; }
+.step-label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.step-result { font-family: var(--mono); font-size: 11px; color: var(--text2); margin-top: 2px; }
+.step-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-top: 3px; text-transform: uppercase; letter-spacing: .04em; }
+.tag-ok { background: rgba(34,197,94,.12); color: #4ade80; }
+.tag-warn { background: rgba(245,158,11,.12); color: #fbbf24; }
+.tag-bad { background: rgba(239,68,68,.18); color: #f87171; }
+
+.aidr-row { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #0f1a26; }
+.aidr-row:last-child { border-bottom: none; }
+.aidr-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.aidr-body strong { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.aidr-body span { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+.action-item { font-size: 10px; color: var(--text2); padding: 5px 0 5px 14px; position: relative; border-bottom: 1px solid #0f1a26; line-height: 1.5; font-family: var(--mono); }
+.action-item:last-child { border-bottom: none; }
+.action-item::before { content: '›'; position: absolute; left: 2px; color: var(--primary); font-weight: 700; }
+.action-item.urgent { color: #fca5a5; }
+.action-item.urgent::before { content: '!'; color: var(--danger); }
+
+.chart-col { display: flex; flex-direction: column; overflow: hidden; background: #131722; }
+.vgrid-header { flex-shrink:0; padding:6px 12px; font-family:var(--mono); font-size:10px; color:var(--text2); background:#0d1520; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+.vgrid { flex:1; display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(2,1fr); gap:1px; background:var(--border); overflow:hidden; }
+@media (max-width: 1150px){ .vgrid{ grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(5,1fr); min-height:900px; } }
+.vpane { background:#131722; display:flex; flex-direction:column; overflow:hidden; min-height:110px; }
+.vpane-hd { flex-shrink:0; display:flex; align-items:center; gap:6px; padding:5px 8px; font-family:var(--mono); }
+.vpane-label { font-size:10px; font-weight:700; color:var(--text2); letter-spacing:.04em; }
+.vpane-unit { font-size:8px; color:var(--muted); }
+.vpane-val { margin-left:auto; font-size:13px; font-weight:700; }
+.vpane-badge { font-size:8px; font-weight:700; padding:1px 5px; border-radius:3px; text-transform:uppercase; letter-spacing:.04em; }
+.vpane-chart { flex:1; min-height:0; }
+.hud-sep { color: #2a3442; }
+
+.alert-banner {
+  display: none; position: fixed; top: 42px; left: 50%; transform: translateX(-50%);
+  background: rgba(127,29,29,.95); border: 1px solid #ef4444; border-radius: 8px;
+  padding: 8px 18px; font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: #fca5a5; z-index: 100; gap: 8px; align-items: center; letter-spacing: .04em;
+  box-shadow: 0 4px 24px rgba(239,68,68,.4); animation: slide-in .2s ease;
+}
+.alert-banner.show { display: flex; }
+@keyframes slide-in { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+.btn-primary {
+  width: 100%; background: var(--primary); color: white; border: none; border-radius: 6px;
+  padding: 7px; font-size: 10px; font-weight: 700; font-family: var(--mono);
+  cursor: pointer; letter-spacing: .05em; transition: all .15s; text-transform: uppercase;
+}
+.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-danger { background: #3a1414; border: 1px solid #ef4444; color: #f87171; }
+.btn-danger:hover { background: #4a1a1a; }
+
+.status-pill { font-size: 10px; font-weight: 700; font-family: var(--mono); padding: 3px 10px; border-radius: 999px; letter-spacing: .05em; text-transform: uppercase; border: 1px solid; white-space:nowrap; }
+.pill-stable { background: rgba(34,197,94,.1); color: #4ade80; border-color: rgba(34,197,94,.3); }
+.pill-warning { background: rgba(245,158,11,.1); color: #fbbf24; border-color: rgba(245,158,11,.3); }
+.pill-critical { background: rgba(239,68,68,.15); color: #f87171; border-color: rgba(239,68,68,.4); animation: blink-border .7s infinite; }
+
+.footer { height: 24px; background: #0d1520; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 10px; font-family: var(--mono); color: var(--muted); flex-shrink: 0; }
+
+.disclaimer-bar { background:#1a1005; border-bottom:1px solid #3a2a10; color:#fbbf24; font-family:var(--mono); font-size:10px; padding:5px 14px; line-height:1.5; flex-shrink:0; }
+.disclaimer-bar b { color:#fde68a; }
+
+/* ── STUDY DRAWER (Quiz / ABG Trainer / Log) ────────── */
+.drawer { background: var(--panel); border-top: 2px solid var(--border); }
+.tabbar { display: flex; gap: 2px; background: #0d1520; padding: 6px 10px 0; }
+.tabbtn { padding: 8px 16px; border: 1px solid var(--border); border-bottom: none; background: var(--panel2); color: var(--muted); border-radius: 6px 6px 0 0; cursor: pointer; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; }
+.tabbtn.active { color: #93c5fd; background: var(--panel); border-color: var(--primary); }
+.tabpanel { display: none; padding: 16px; }
+.tabpanel.active { display: block; }
+
+.qcat { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.qcat span { font-size: 9px; padding: 4px 9px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.qcat span.active { color: #4ade80; border-color: #4ade80; }
+.qbox { border: 1px solid var(--border2); border-radius: 8px; padding: 16px; background: #0d1520; max-width: 780px; }
+.qmeta { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; font-family: var(--mono); font-weight: 700; }
+.qtext { font-size: 14px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
+.opt { display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--panel); color: var(--text2); cursor: pointer; font-size: 12.5px; font-family: Inter,sans-serif; }
+.opt:hover { border-color: var(--primary); }
+.opt.correct { border-color: #22c55e; background: rgba(34,197,94,.12); color: #4ade80; }
+.opt.wrong { border-color: #ef4444; background: rgba(239,68,68,.12); color: #f87171; }
+.explain { margin-top: 10px; font-size: 11.5px; color: var(--text2); border-top: 1px dashed var(--border2); padding-top: 10px; line-height: 1.6; }
+.scorebar { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); max-width: 780px; }
+.scorebar b { color: #93c5fd; }
+.btn-row { display: flex; gap: 8px; margin-top: 10px; max-width: 780px; }
+.btn-row .btn-primary { flex: 1; }
+
+.abg-grid-t { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; max-width: 420px; margin-bottom: 14px; }
+.abg-cell-t { border: 1px solid var(--border2); border-radius: 6px; padding: 8px; text-align: center; background: var(--panel); }
+.abg-cell-t .k { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+.abg-cell-t .v { font-family: var(--mono); font-size: 16px; font-weight: 700; color: #93c5fd; }
+
+.logline { font-size: 10.5px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid #0f1a26; font-family: var(--mono); }
+.logline b { color: #93c5fd; }
+#logList { max-height: 260px; overflow-y: auto; max-width: 780px; }
+
+.med-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #0f1a26; }
+.med-row:last-child { border-bottom: none; }
+.med-info { flex: 1; min-width: 0; }
+.med-name { font-size: 11px; font-weight: 700; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.med-cls { font-size: 9px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
+.med-teach { font-size: 9.5px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+.med-badge { font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: rgba(34,197,94,.15); color: #4ade80; text-transform: uppercase; letter-spacing: .04em; }
+.med-btn { flex-shrink: 0; width: auto; padding: 6px 12px; font-size: 9px; align-self: center; }
+.med-search { width: 100%; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="alert-banner" id="alertBanner">
+  <span>⚠</span>
+  <span id="alertText">CRITICAL VALUE DETECTED</span>
+  <span style="cursor:pointer;color:#94a3b8;font-weight:400;" onclick="dismissAlert()">✕</span>
+</div>
+
+<div class="disclaimer-bar"><b>Study tool, not a clinical device.</b> Simplified educational model for NBRC concept-building (oxygenation, ventilation, acid-base, vent settings). Not validated for patient care — verify against your course materials and the NBRC content outline.</div>
+
+<!-- ══ TOPBAR ═══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="brand"><div class="brand-pulse"></div><span style="color:#93c5fd">RT</span>-SIM<span style="color:#4ade80;font-size:10px;margin-left:2px">PRO</span></div>
+
+  <select id="caseSelect" class="f-inp" style="width:auto;font-size:10px;padding:3px 8px;background:#0d1520;"></select>
+
+  <div class="tb-sep"></div>
+
+  <span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-right:2px;">SPEED</span>
+  <button class="tf-btn" data-speed="1">1×</button>
+  <button class="tf-btn active" data-speed="2">2×</button>
+  <button class="tf-btn" data-speed="4">4×</button>
+  <button class="tf-btn" data-speed="8">8×</button>
+  <button id="btnPlayPause" class="util-btn active" style="margin-left:4px;">⏸ Pause</button>
+
+  <div class="tb-sep"></div>
+
+  <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">LEGEND</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#4ade80;">● Normal</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#fbbf24;">● Warning</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ef4444;">● Critical</span>
+
+  <div style="flex:1"></div>
+
+  <span id="simClock" style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-right:8px;">t+00:00</span>
+  <span id="overallStatus" class="status-pill pill-stable">Stable</span>
+</div>
+
+<!-- ══ APP GRID ══════════════════════════════════════════════════ -->
+<div class="app-grid">
+
+  <!-- ─── LEFT SIDEBAR ─────────────────────────────────────────── -->
+  <div class="sidebar sidebar-left">
+    <div class="sidebar-body" id="leftSidebarBody"></div>
+  </div>
+
+  <!-- ─── CHART AREA — KEY INDICATOR TRENDS ─────────────────────── -->
+  <div class="chart-col">
+    <div class="vgrid-header">
+      <span>Case: <b id="chartCaseLabel" style="color:#818cf8;">—</b></span>
+      <span class="hud-sep">|</span>
+      <span style="color:var(--muted);">10 key indicators, updated live · dashed lines mark the normal reference range</span>
+    </div>
+    <div id="vitalsChartGrid" class="vgrid"></div>
+  </div>
+
+  <!-- ─── RIGHT SIDEBAR ─────────────────────────────────────── -->
+  <div class="sidebar sidebar-right">
+    <div class="sidebar-body" id="rightSidebarBody"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="brand-pulse" style="width:6px;height:6px;display:inline-block;border-radius:50%;background:#22c55e;"></span>
+    NBRC STUDY WORKSPACE — SIMULATED STREAM
+  </div>
+  <span>RT-SIM PRO v1.0 // 2026</span>
+</div>
+
+<!-- ══ STUDY DRAWER ═══════════════════════════════════════════════ -->
+<div class="drawer">
+  <div class="tabbar">
+    <button class="tabbtn active" data-tab="quiz">NBRC Quiz Bank</button>
+    <button class="tabbtn" data-tab="abgtrain">ABG Interpretation Drill</button>
+    <button class="tabbtn" data-tab="log">Clinical Decision Log</button>
+  </div>
+  <div class="tabpanel active" id="tab-quiz"></div>
+  <div class="tabpanel" id="tab-abgtrain"></div>
+  <div class="tabpanel" id="tab-log"><div id="logList"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+/* =====================================================================
+   NBRC-STYLE QUESTION BANK
+   Written as study/practice items covering common RT board content areas.
+   ===================================================================== */
+const QUIZ_BANK = [
+  {cat:"O2 Therapy", q:"A patient on a non-rebreather mask at 10 L/min is still hypoxemic. The reservoir bag collapses more than 1/3 during inspiration. What should you do first?",
+   options:["Increase the flow rate","Switch to a nasal cannula","Add a Venturi adapter","Decrease the flow rate"],
+   a:0, exp:"The reservoir bag should stay mostly inflated throughout inspiration. If it collapses significantly, flow is too low to meet inspiratory demand — increase flow (typically toward 15 L/min) before troubleshooting further."},
+  {cat:"O2 Therapy", q:"Which oxygen delivery device provides the most precise, fixed FiO₂ regardless of the patient's inspiratory flow pattern?",
+   options:["Simple mask","Nasal cannula","Venturi mask","Non-rebreather mask"],
+   a:2, exp:"A Venturi (air-entrainment) mask is a fixed-performance device — it entrains a set air:oxygen ratio so FiO₂ stays constant even if the patient's inspiratory flow changes."},
+  {cat:"ABG / Acid-Base", q:"ABG: pH 7.30, PaCO₂ 60, HCO₃⁻ 28. How should this be classified?",
+   options:["Acute uncompensated respiratory acidosis","Partially compensated respiratory acidosis","Fully compensated respiratory acidosis","Uncompensated metabolic alkalosis"],
+   a:1, exp:"pH is acidemic and PaCO₂ is high (respiratory acidosis is primary). HCO₃⁻ is also elevated above normal, showing the kidneys are compensating — but pH hasn't normalized yet, so it's partially compensated."},
+  {cat:"ABG / Acid-Base", q:"A patient with DKA has pH 7.28, PaCO₂ 22, HCO₃⁻ 11. What is the primary disorder?",
+   options:["Respiratory alkalosis","Metabolic acidosis with respiratory compensation","Respiratory acidosis","Combined metabolic and respiratory acidosis"],
+   a:1, exp:"Low HCO₃⁻ with acidemia points to a primary metabolic acidosis. The low PaCO₂ reflects appropriate respiratory compensation (Kussmaul breathing blowing off CO₂), not a separate respiratory problem."},
+  {cat:"ABG / Acid-Base", q:"Normal PaO₂ on room air at sea level is approximately:",
+   options:["40–60 mmHg","60–70 mmHg","80–100 mmHg","110–130 mmHg"],
+   a:2, exp:"Normal PaO₂ on room air is roughly 80–100 mmHg, decreasing somewhat with age."},
+  {cat:"Mechanical Ventilation", q:"A patient with ARDS is on volume control A/C. Plateau pressure has risen from 24 to 32 cmH₂O while peak pressure is unchanged. This suggests:",
+   options:["Increased airway resistance (e.g., mucus plug)","Decreased lung/chest wall compliance","Ventilator circuit leak","Bronchodilator response"],
+   a:1, exp:"Peak pressure reflects both resistance and compliance; plateau pressure (measured during an inspiratory hold, no flow) reflects compliance alone. A rising plateau with stable peak points to worsening compliance, not resistance."},
+  {cat:"Mechanical Ventilation", q:"In ARDS management, tidal volume is typically targeted to:",
+   options:["10–12 mL/kg ideal body weight","6 mL/kg ideal body weight (4–8 range)","15 mL/kg actual body weight","A fixed 500 mL for all adults"],
+   a:1, exp:"Lung-protective ventilation targets roughly 6 mL/kg IBW (range 4–8) to limit volutrauma, based on the ARDSNet protocol."},
+  {cat:"Mechanical Ventilation", q:"Peak inspiratory pressure rises suddenly and plateau pressure stays the same. The most likely cause is:",
+   options:["Pneumothorax","Increased airway resistance (bronchospasm, secretions, kinked tube)","Decreased compliance from pulmonary edema","Patient-ventilator asynchrony from oversedation"],
+   a:1, exp:"A rise in peak pressure without a rise in plateau pressure isolates the problem to resistance — something narrowing the airway or circuit, such as secretions, bronchospasm, or a kinked ETT."},
+  {cat:"Mechanical Ventilation", q:"A COPD patient on the ventilator is showing signs of auto-PEEP (breath stacking). Which change is most appropriate?",
+   options:["Increase respiratory rate","Increase inspiratory time","Decrease respiratory rate to allow more expiratory time","Increase tidal volume"],
+   a:2, exp:"Auto-PEEP occurs when there isn't enough time to fully exhale before the next breath. Slowing the rate (and/or shortening inspiratory time) gives more time for expiration and reduces gas trapping."},
+  {cat:"Mechanical Ventilation", q:"Which ventilator mode allows the patient to trigger and fully control the size and timing of every breath, with the ventilator only adding pressure support?",
+   options:["Volume Control A/C","Pressure Control A/C","SIMV","Pressure Support Ventilation (PSV)"],
+   a:3, exp:"PSV is a spontaneous-only mode: every breath is patient-triggered, patient-flow-cycled, and only the pressure boost is set by the clinician; the patient determines rate and largely the volume."},
+  {cat:"Mechanical Ventilation", q:"Increasing PEEP is most likely to improve oxygenation in which condition?",
+   options:["Pulmonary embolism (dead-space physiology)","Cardiogenic/ARDS-type shunt hypoxemia with recruitable alveoli","Anemia","Carbon monoxide poisoning"],
+   a:1, exp:"PEEP works by recruiting and stabilizing collapsed, but potentially recruitable, alveoli — helpful in shunt-type hypoxemia like ARDS or cardiogenic edema. It does little for dead-space or non-pulmonary causes of hypoxemia."},
+  {cat:"Patient Assessment", q:"A patient's SpO₂ reads 100% but the patient is confused and cyanotic-appearing with a suspected house fire exposure. What should you suspect?",
+   options:["Sensor malfunction only","Carbon monoxide poisoning (falsely high SpO₂)","Anemia","Methemoglobinemia causing falsely low SpO₂"],
+   a:1, exp:"Standard pulse oximetry cannot distinguish oxyhemoglobin from carboxyhemoglobin, so CO poisoning can show a falsely reassuring high SpO₂ despite poor actual oxygen-carrying capacity. Co-oximetry is needed to confirm."},
+  {cat:"Patient Assessment", q:"Which finding is most consistent with a tension pneumothorax?",
+   options:["Bilateral wheezing and prolonged expiration","Unilateral absent breath sounds, tracheal deviation away from the affected side, hypotension","Bilateral crackles and pink frothy sputum","Stridor with a barking cough"],
+   a:1, exp:"Tension pneumothorax classically causes unilateral decreased/absent breath sounds, tracheal deviation away from the affected side, distended neck veins, and obstructive-shock hypotension — a medical emergency requiring immediate decompression."},
+  {cat:"Patient Assessment", q:"Widened PaCO₂–EtCO₂ gradient is most classically associated with:",
+   options:["Increased dead-space ventilation (e.g., pulmonary embolism)","Increased shunt (e.g., ARDS)","Hyperthermia","Metabolic alkalosis"],
+   a:0, exp:"EtCO₂ approximates alveolar (and roughly arterial) CO₂ only when ventilated alveoli are also well-perfused. Dead space (ventilated but not perfused, as in PE) widens the PaCO₂–EtCO₂ gap."},
+  {cat:"Airway Management", q:"During intubation, correct ETT placement is best confirmed by:",
+   options:["Chest x-ray only","Auscultation alone","Continuous waveform capnography plus bilateral breath sounds","Pulse oximetry alone"],
+   a:2, exp:"Waveform capnography (a sustained CO₂ waveform) combined with bilateral, equal breath sounds is the most reliable bedside confirmation of tracheal (not esophageal) placement; CXR then confirms depth."},
+  {cat:"Airway Management", q:"A patient develops stridor and increasing work of breathing shortly after extubation. This is most concerning for:",
+   options:["Bronchospasm only","Post-extubation laryngeal edema/upper airway obstruction","Pneumothorax","Pulmonary embolism"],
+   a:1, exp:"Stridor after extubation is a classic sign of upper airway narrowing from laryngeal/glottic edema and may require racemic epinephrine, steroids, or reintubation if severe."},
+  {cat:"Airway Management", q:"Suctioning an intubated patient should generally be limited to how long per pass to reduce hypoxemia risk?",
+   options:["About 10–15 seconds","About 60 seconds","About 2 minutes","No time limit as long as SpO₂ is monitored"],
+   a:0, exp:"Each suction pass is typically kept to roughly 10–15 seconds to limit hypoxemia and vagal stimulation, with pre-oxygenation and monitoring throughout."},
+  {cat:"Infection Control / Equipment", q:"Ventilator-associated pneumonia prevention bundles typically include all of the following EXCEPT:",
+   options:["Head-of-bed elevation 30–45°","Daily sedation vacations / spontaneous awakening trials","Routine scheduled ventilator circuit changes every 8 hours","Oral care with chlorhexidine per protocol"],
+   a:2, exp:"Circuits are changed only when visibly soiled or malfunctioning, not on a fixed frequent schedule — frequent routine changes actually increase VAP risk by disrupting the closed system."},
+  {cat:"Infection Control / Equipment", q:"An N95 respirator differs from a standard surgical mask primarily because it:",
+   options:["Is more comfortable for long shifts","Filters at least 95% of small airborne particles with a tight facial seal","Is reusable indefinitely without fit testing","Provides supplemental oxygen"],
+   a:1, exp:"N95 respirators are designed and fit-tested to filter ≥95% of small (0.3 micron) airborne particles via a sealed fit, unlike loose-fitting surgical masks which primarily block droplets."},
+  {cat:"Infection Control / Equipment", q:"Before each use, a manual resuscitation bag (BVM) should be checked to ensure:",
+   options:["The pop-off valve is disabled","The bag reinflates immediately after compression and valves function correctly","It is connected to wall suction","The mask is the largest size available regardless of patient"],
+   a:1, exp:"Proper function check includes confirming the bag reinflates promptly after each compression and that the valves (inlet/patient/exhalation) move freely — key for delivering adequate volume."},
+  {cat:"Pharmacology", q:"A patient receiving a beta-2 agonist bronchodilator (e.g., albuterol) should be monitored for which common side effect?",
+   options:["Bradycardia and hypotension","Tachycardia and tremor","Respiratory depression","Hyperkalemia"],
+   a:1, exp:"Beta-2 agonists commonly cause tachycardia, tremor, and sometimes mild hypokalemia due to beta-adrenergic stimulation."},
+  {cat:"Pharmacology", q:"Naloxone is indicated for:",
+   options:["Reversal of benzodiazepine overdose","Reversal of opioid-induced respiratory depression","Treatment of status asthmaticus","Reversal of neuromuscular blockade"],
+   a:1, exp:"Naloxone is a competitive opioid receptor antagonist used to reverse opioid-induced respiratory depression."},
+  {cat:"Pharmacology", q:"Which medication class works by inhibiting acetylcholine at bronchial smooth muscle, causing bronchodilation?",
+   options:["Beta-2 agonists (e.g., albuterol)","Anticholinergics (e.g., ipratropium)","Inhaled corticosteroids","Mucolytics"],
+   a:1, exp:"Anticholinergics like ipratropium block muscarinic receptors, reducing vagally-mediated bronchoconstriction — useful especially in COPD."},
+  {cat:"Equipment / Calculations", q:"A cylinder of E-size oxygen reads 1500 psig. Using an E-cylinder conversion factor of 0.28, roughly how much time remains at a flow of 5 L/min?",
+   options:["About 14 minutes","About 84 minutes","About 42 minutes","About 168 minutes"],
+   a:1, exp:"Duration (min) ≈ (psig × cylinder factor) ÷ flow = (1500 × 0.28) ÷ 5 = 420 ÷ 5 = 84 minutes. Common factors: D=0.16, E=0.28, H/K≈3.14 — confirm the exact factors your course uses."},
+  {cat:"Equipment / Calculations", q:"Ideal body weight (used for lung-protective Vt calculations) is based primarily on which two variables?",
+   options:["Actual body weight and age","Height and sex","BMI and waist circumference","Age and sex only"],
+   a:1, exp:"IBW formulas (e.g., Devine formula) use height and sex — not actual weight — because lung size correlates with height, not adiposity."},
+  {cat:"Patient Assessment", q:"A patient's capillary refill is prolonged beyond 3 seconds along with cool, mottled extremities. This most directly suggests:",
+   options:["Adequate peripheral perfusion","Poor peripheral perfusion (possible shock)","Hyperthyroidism","Normal finding in all patients"],
+   a:1, exp:"Delayed capillary refill and cool, mottled skin are signs of poor peripheral perfusion, often seen in shock states."},
+  {cat:"ABG / Acid-Base", q:"ABG: pH 7.49, PaCO₂ 30, HCO₃⁻ 23. This represents:",
+   options:["Uncompensated respiratory alkalosis","Partially compensated metabolic alkalosis","Uncompensated metabolic acidosis","Fully compensated respiratory acidosis"],
+   a:0, exp:"pH is alkalemic, PaCO₂ is low (primary respiratory alkalosis), and HCO₃⁻ is essentially normal — meaning no significant metabolic compensation has occurred yet."},
+  {cat:"Mechanical Ventilation", q:"A ventilator's low pressure/low PEEP alarm sounds. What is the most likely cause?",
+   options:["Mucus plug in the ETT","Circuit disconnection or cuff leak","Bronchospasm","Patient biting the tube"],
+   a:1, exp:"Loss of circuit integrity — a disconnection, leak, or deflated cuff — drops delivered pressure and PEEP, triggering the low-pressure alarm. Obstructive problems (mucus, biting, bronchospasm) instead raise pressures."},
+  {cat:"O2 Therapy", q:"A high-flow nasal cannula system primarily improves oxygenation and work of breathing by:",
+   options:["Delivering only room air at very high pressure","Providing heated, humidified high flow that meets/exceeds patient inspiratory demand and washes out nasopharyngeal dead space","Acting as a substitute for invasive mechanical ventilation in all patients","Preventing all forms of aspiration"],
+   a:1, exp:"HFNC delivers heated/humidified gas at flows that can meet or exceed the patient's peak inspiratory flow, provide a small distending pressure, and wash out anatomic dead space — improving comfort and oxygenation, though it is not appropriate for every level of respiratory failure."}
+];
+
+const SCENARIOS = {
+  copd: {
+    name: "COPD Exacerbation",
+    history: "62M, 40 pack-year smoker, 3 days of worsening dyspnea and productive cough. Barrel chest, prolonged expiration, accessory muscle use.",
+    teach: "Chronic CO2 retainers run a compensated respiratory acidosis at baseline — don't chase a normal PaCO2. Watch for air-trapping / auto-PEEP with high rates or short expiratory times.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 45, resistance: 28, shunt: 0.15, deadspace: 0.35, vco2: 1.0, peepResponsive: 0.4 },
+    hco3Base: 32, hr: 108, bpS: 138, bpD: 84, temp: 37.0,
+    vent: { mode: "vcac", rr: 14, vt: 450, peep: 5, fio2: 40, ps: 0, ie: 3 }
+  },
+  asthma: {
+    name: "Status Asthmaticus",
+    history: "24F, acute severe asthma exacerbation, audible wheeze, silent chest on the worst days, unable to speak in full sentences.",
+    teach: "High airway resistance risks breath-stacking / dynamic hyperinflation. Strategy: lower rate, longer expiratory time (I:E), accept permissive hypercapnia rather than chase normal CO2.",
+    intubated: false,
+    device: "nrb", flow: 12,
+    mech: { compliance: 55, resistance: 35, shunt: 0.10, deadspace: 0.30, vco2: 1.1, peepResponsive: 0.15 },
+    hco3Base: 24, hr: 122, bpS: 128, bpD: 78, temp: 37.2,
+    vent: { mode: "vcac", rr: 12, vt: 420, peep: 3, fio2: 45, ps: 0, ie: 4 }
+  },
+  ards: {
+    name: "ARDS (Sepsis-Induced)",
+    history: "45M, day 2 of septic shock from pneumonia, bilateral infiltrates on CXR, PaO2/FiO2 ratio consistent with moderate-severe ARDS.",
+    teach: "Lung-protective ventilation: target ~6 mL/kg IBW (4–8 range), keep plateau pressure <30 cmH2O, use higher PEEP for refractory hypoxemia, and accept permissive hypercapnia.",
+    intubated: true,
+    mech: { compliance: 20, resistance: 18, shunt: 0.42, deadspace: 0.40, vco2: 1.25, peepResponsive: 0.85 },
+    hco3Base: 24, hr: 118, bpS: 96, bpD: 58, temp: 38.6,
+    vent: { mode: "vcac", rr: 24, vt: 360, peep: 12, fio2: 70, ps: 0, ie: 2 }
+  },
+  edema: {
+    name: "Cardiogenic Pulmonary Edema",
+    history: "70M, history of CHF, acute decompensation overnight, pink frothy sputum, bilateral crackles, JVD.",
+    teach: "PEEP improves oxygenation here by recruiting flooded alveoli AND reduces preload/afterload, which helps the failing heart — but watch blood pressure as PEEP climbs.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 32, resistance: 16, shunt: 0.32, deadspace: 0.25, vco2: 1.0, peepResponsive: 0.9 },
+    hco3Base: 24, hr: 112, bpS: 168, bpD: 96, temp: 36.9,
+    vent: { mode: "pcac", rr: 20, vt: 380, peep: 8, fio2: 60, ps: 0, ie: 2 }
+  },
+  pneumonia: {
+    name: "Community-Acquired Pneumonia",
+    history: "55M, 3 days of fever, productive cough, right lower lobe consolidation on CXR, febrile and tachycardic.",
+    teach: "Fever raises metabolic CO2 production — minute ventilation needs may increase even without a lung mechanics change. Consolidation causes shunt-type hypoxemia that is only partially PEEP-responsive.",
+    intubated: false,
+    device: "venturi", flow: 6, fio2Fixed: 35,
+    mech: { compliance: 40, resistance: 18, shunt: 0.28, deadspace: 0.25, vco2: 1.2, peepResponsive: 0.5 },
+    hco3Base: 24, hr: 114, bpS: 124, bpD: 76, temp: 39.1,
+    vent: { mode: "vcac", rr: 18, vt: 420, peep: 5, fio2: 45, ps: 0, ie: 3 }
+  },
+  atelectasis: {
+    name: "Post-Operative Atelectasis",
+    history: "38F, post-op day 1 after abdominal surgery, shallow breathing due to incisional pain, decreased breath sounds at bases.",
+    teach: "Classic recruitable low-shunt hypoxemia — incentive spirometry, early mobilization, adequate pain control, and modest PEEP typically resolve this without heavy intervention.",
+    intubated: false,
+    device: "nc", flow: 3,
+    mech: { compliance: 48, resistance: 15, shunt: 0.15, deadspace: 0.20, vco2: 0.95, peepResponsive: 0.7 },
+    hco3Base: 24, hr: 96, bpS: 118, bpD: 74, temp: 37.4,
+    vent: { mode: "vcac", rr: 16, vt: 400, peep: 5, fio2: 35, ps: 0, ie: 3 }
+  },
+  opioid: {
+    name: "Opioid-Induced Respiratory Depression",
+    history: "29M, found unresponsive, pinpoint pupils, respiratory rate 6/min, otherwise structurally normal lungs.",
+    teach: "The problem here is drive, not the lungs. Minute ventilation is dangerously low — support ventilation and correct the underlying cause (e.g., naloxone) rather than treating this like a lung-mechanics problem.",
+    intubated: false,
+    device: "bvm", flow: 15,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 0.9, peepResponsive: 0.2 },
+    hco3Base: 24, hr: 58, bpS: 102, bpD: 64, temp: 36.4,
+    vent: { mode: "vcac", rr: 6, vt: 450, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  },
+  dka: {
+    name: "Diabetic Ketoacidosis",
+    history: "19F, known type 1 diabetic, 2 days of vomiting, deep rapid Kussmaul respirations, fruity breath odor.",
+    teach: "This is a metabolic acidosis with respiratory compensation — the fast deep breathing is appropriate and should not be sedated or slowed. If ever intubated, you must match (not undercut) their native minute ventilation or pH will crash.",
+    intubated: false,
+    device: "ra", flow: 0,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 1.15, peepResponsive: 0.2 },
+    hco3Base: 9, hr: 118, bpS: 100, bpD: 62, temp: 37.1,
+    vent: { mode: "vcac", rr: 28, vt: 480, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  },
+  pe: {
+    name: "Acute Pulmonary Embolism",
+    history: "50F, post-op day 3, sudden pleuritic chest pain and dyspnea, tachycardic, tachypneic, one calf swollen.",
+    teach: "Classic increased dead-space physiology — ventilated alveoli aren't perfused, so EtCO2 reads much lower than PaCO2 (widened gradient). Hypoxemia and hemodynamic instability can be severe with a large clot burden.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 50, resistance: 15, shunt: 0.20, deadspace: 0.55, vco2: 1.0, peepResponsive: 0.25 },
+    hco3Base: 24, hr: 128, bpS: 92, bpD: 58, temp: 37.0,
+    vent: { mode: "vcac", rr: 22, vt: 420, peep: 5, fio2: 50, ps: 0, ie: 3 }
+  },
+  ptx: {
+    name: "Traumatic (Tension) Pneumothorax",
+    history: "26M, MVC, decreased breath sounds on the left, tracheal deviation to the right, hypotensive and tachycardic.",
+    teach: "This is an emergent, obstructive-shock physiology — needle decompression / chest tube take priority over ventilator adjustments. Positive-pressure ventilation can worsen a tension pneumothorax before it's decompressed.",
+    intubated: true,
+    mech: { compliance: 25, resistance: 18, shunt: 0.30, deadspace: 0.30, vco2: 1.05, peepResponsive: 0.3 },
+    hco3Base: 24, hr: 132, bpS: 82, bpD: 52, temp: 36.7,
+    vent: { mode: "vcac", rr: 18, vt: 380, peep: 5, fio2: 80, ps: 0, ie: 3 }
+  },
+  gbs: {
+    name: "Guillain-Barré Syndrome",
+    history: "34M, ascending weakness over 5 days following a GI illness, now with declining vital capacity and weak cough, lungs clear.",
+    teach: "Neuromuscular weakness causes a pure ventilatory pump failure with normal lung mechanics — trend serial vital capacity and NIF/MIP rather than waiting for ABG changes; intubate electively before crisis.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 0.9, peepResponsive: 0.2 },
+    hco3Base: 24, hr: 92, bpS: 116, bpD: 72, temp: 36.9,
+    vent: { mode: "vcac", rr: 10, vt: 320, peep: 0, fio2: 28, ps: 0, ie: 3 }
+  },
+  myasthenic: {
+    name: "Myasthenic Crisis",
+    history: "48F, known myasthenia gravis, recent infection, worsening ptosis, dysphagia, and shallow rapid breathing.",
+    teach: "Similar pump-failure physiology to Guillain-Barré — watch for rapid shallow breathing (high RR, low VT) as an early warning sign of impending ventilatory failure before CO2 rises.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 0.9, peepResponsive: 0.2 },
+    hco3Base: 24, hr: 104, bpS: 122, bpD: 76, temp: 37.0,
+    vent: { mode: "vcac", rr: 26, vt: 260, peep: 0, fio2: 28, ps: 0, ie: 3 }
+  },
+  flail: {
+    name: "Flail Chest / Pulmonary Contusion",
+    history: "41M, fall from height, multiple rib fractures with paradoxical chest wall movement, underlying lung contusion.",
+    teach: "Pain-limited shallow breathing plus contused lung tissue causes both a restrictive mechanical problem and shunt-type hypoxemia — adequate analgesia (including regional blocks) is as important as vent settings.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 28, resistance: 20, shunt: 0.30, deadspace: 0.25, vco2: 1.05, peepResponsive: 0.55 },
+    hco3Base: 24, hr: 116, bpS: 108, bpD: 68, temp: 37.3,
+    vent: { mode: "pcac", rr: 20, vt: 340, peep: 6, fio2: 55, ps: 0, ie: 2 }
+  },
+  drowning: {
+    name: "Near-Drowning (Immersion Injury)",
+    history: "8-year-old pulled from a pool, brief submersion, coughing, tachypneic, coarse crackles bilaterally.",
+    teach: "Aspirated water washes out surfactant, producing ARDS-like shunt physiology regardless of fresh vs. salt water. Manage like ARDS: lung-protective ventilation and PEEP for recruitment.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 30, resistance: 20, shunt: 0.35, deadspace: 0.25, vco2: 1.05, peepResponsive: 0.75 },
+    hco3Base: 24, hr: 124, bpS: 100, bpD: 64, temp: 36.2,
+    vent: { mode: "vcac", rr: 24, vt: 300, peep: 8, fio2: 60, ps: 0, ie: 2 }
+  },
+  anaphylaxis: {
+    name: "Anaphylaxis with Angioedema",
+    history: "27F, ate shellfish 20 minutes ago, now with facial/lip swelling, stridor, wheeze, and hypotension.",
+    teach: "Upper airway edema can obstruct completely and fast — epinephrine first, and secure the airway early before swelling makes intubation impossible. Wheeze reflects a lower-airway component too.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 45, resistance: 32, shunt: 0.15, deadspace: 0.25, vco2: 1.1, peepResponsive: 0.2 },
+    hco3Base: 24, hr: 128, bpS: 84, bpD: 52, temp: 37.0,
+    vent: { mode: "vcac", rr: 24, vt: 380, peep: 3, fio2: 60, ps: 0, ie: 3 }
+  },
+  smoke: {
+    name: "Smoke Inhalation / CO Exposure",
+    history: "36M, pulled from a house fire, soot around the mouth and nose, singed nasal hairs, hoarse voice, drowsy.",
+    teach: "Pulse oximetry reads falsely normal/high with carboxyhemoglobin present — it cannot distinguish oxy- from carboxyhemoglobin. Suspect CO poisoning from history and treat with high-FiO2/100% O2 regardless of the SpO2 number; co-oximetry confirms.",
+    intubated: false,
+    device: "nrb", flow: 15,
+    mech: { compliance: 45, resistance: 22, shunt: 0.20, deadspace: 0.25, vco2: 1.1, peepResponsive: 0.3 },
+    hco3Base: 22, hr: 118, bpS: 110, bpD: 70, temp: 37.5,
+    vent: { mode: "vcac", rr: 20, vt: 400, peep: 5, fio2: 100, ps: 0, ie: 3 }
+  },
+  croup: {
+    name: "Pediatric Croup (Laryngotracheobronchitis)",
+    history: "2-year-old, barky seal-like cough, inspiratory stridor at rest, low-grade fever, worse at night.",
+    teach: "Stridor at rest signals significant upper airway narrowing — nebulized racemic epinephrine and corticosteroids are first-line; avoid agitating the child, which can worsen dynamic airway collapse.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 50, resistance: 30, shunt: 0.10, deadspace: 0.30, vco2: 1.0, peepResponsive: 0.15 },
+    hco3Base: 24, hr: 138, bpS: 96, bpD: 60, temp: 38.2,
+    vent: { mode: "vcac", rr: 32, vt: 140, peep: 0, fio2: 30, ps: 0, ie: 3 }
+  },
+  epiglottitis: {
+    name: "Acute Epiglottitis",
+    history: "4-year-old, sudden high fever, drooling, tripod positioning, muffled 'hot potato' voice, refusing to lie down.",
+    teach: "This is a surgical-airway emergency in disguise — avoid examining the throat or agitating the child, which can precipitate complete obstruction; airway management should happen in a controlled setting (OR) with anesthesia/ENT present.",
+    intubated: false,
+    device: "ra", flow: 0,
+    mech: { compliance: 50, resistance: 34, shunt: 0.10, deadspace: 0.30, vco2: 1.05, peepResponsive: 0.1 },
+    hco3Base: 24, hr: 144, bpS: 92, bpD: 58, temp: 39.4,
+    vent: { mode: "vcac", rr: 34, vt: 130, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  },
+  bronchiolitis: {
+    name: "Pediatric Bronchiolitis (RSV)",
+    history: "6-month-old, 2 days of rhinorrhea, now with wheeze, retractions, and nasal flaring; RSV season.",
+    teach: "Small airways plus mucus and edema behave like a pediatric obstructive picture — supportive care (suctioning, oxygen, hydration) is the mainstay; bronchodilator response is inconsistent at this age.",
+    intubated: false,
+    device: "nc", flow: 1,
+    mech: { compliance: 50, resistance: 26, shunt: 0.15, deadspace: 0.30, vco2: 1.0, peepResponsive: 0.25 },
+    hco3Base: 24, hr: 158, bpS: 88, bpD: 54, temp: 38.0,
+    vent: { mode: "vcac", rr: 46, vt: 60, peep: 0, fio2: 30, ps: 0, ie: 3 }
+  },
+  cf: {
+    name: "Cystic Fibrosis Exacerbation",
+    history: "22M, known CF, increased thick sputum production, weight loss, declining exercise tolerance, low baseline SpO2.",
+    teach: "Airway clearance therapy (chest physiotherapy, oscillatory PEP devices) is as central as bronchodilators/antibiotics here — chronic bronchiectasis creates a mixed obstructive picture with copious secretions.",
+    intubated: false,
+    device: "nc", flow: 3,
+    mech: { compliance: 48, resistance: 26, shunt: 0.20, deadspace: 0.30, vco2: 1.1, peepResponsive: 0.3 },
+    hco3Base: 27, hr: 104, bpS: 112, bpD: 70, temp: 37.6,
+    vent: { mode: "vcac", rr: 20, vt: 380, peep: 4, fio2: 32, ps: 0, ie: 3 }
+  },
+  fibrosis: {
+    name: "Idiopathic Pulmonary Fibrosis (Restrictive)",
+    history: "68M, progressive dry cough and dyspnea over months, fine bibasilar 'Velcro' crackles, digital clubbing.",
+    teach: "Classic restrictive disease: low compliance, small tidal volumes at a fast rate, and a nonresponsive-to-PEEP hypoxemia pattern (little shunt, more V/Q mismatch/diffusion limitation) — high-flow oxygen is often the mainstay.",
+    intubated: false,
+    device: "nc", flow: 4,
+    mech: { compliance: 22, resistance: 14, shunt: 0.18, deadspace: 0.30, vco2: 1.0, peepResponsive: 0.25 },
+    hco3Base: 24, hr: 100, bpS: 128, bpD: 78, temp: 37.0,
+    vent: { mode: "vcac", rr: 24, vt: 320, peep: 4, fio2: 40, ps: 0, ie: 2.5 }
+  },
+  ohs: {
+    name: "Obesity Hypoventilation Syndrome",
+    history: "52M, BMI 46, daytime sleepiness, morning headaches, known severe OSA, chronically elevated CO2 at baseline.",
+    teach: "Chest wall/abdominal mass loads the respiratory pump, causing chronic alveolar hypoventilation — this patient runs a compensated respiratory acidosis at baseline, similar to COPD; NIV (BiPAP) at night is often the definitive therapy.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 38, resistance: 18, shunt: 0.18, deadspace: 0.25, vco2: 1.05, peepResponsive: 0.4 },
+    hco3Base: 31, hr: 90, bpS: 138, bpD: 86, temp: 36.9,
+    vent: { mode: "vcac", rr: 14, vt: 380, peep: 6, fio2: 32, ps: 0, ie: 3 }
+  },
+  salicylate: {
+    name: "Salicylate (Aspirin) Overdose",
+    history: "20F, intentional aspirin overdose, tinnitus, hyperventilating, nauseated, confused.",
+    teach: "Classic mixed picture: salicylates directly stimulate the respiratory center (primary respiratory alkalosis) while also causing a primary metabolic acidosis — look for both a low PaCO2 and a low HCO3 at the same time rather than expecting simple compensation.",
+    intubated: false,
+    device: "ra", flow: 0,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 1.1, peepResponsive: 0.2 },
+    hco3Base: 14, hr: 116, bpS: 106, bpD: 66, temp: 37.8,
+    vent: { mode: "vcac", rr: 30, vt: 460, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  },
+  vomiting: {
+    name: "Metabolic Alkalosis (Prolonged Vomiting/NG Suction)",
+    history: "45F, 4 days of intractable vomiting from a bowel obstruction, now with muscle cramps and weakness.",
+    teach: "Loss of gastric acid (H+ and Cl-) drives a primary metabolic alkalosis; expect a compensatory rise in PaCO2 (mild hypoventilation) — correcting volume and chloride/potassium deficits treats the root cause.",
+    intubated: false,
+    device: "ra", flow: 0,
+    mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 0.95, peepResponsive: 0.2 },
+    hco3Base: 36, hr: 98, bpS: 102, bpD: 64, temp: 36.8,
+    vent: { mode: "vcac", rr: 12, vt: 440, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  }
+};
+
+const O2_DEVICES = {
+  ra:      { label: "Room Air", fio2: 21 },
+  nc:      { label: "Nasal Cannula", fio2FromFlow: f => Math.min(44, 21 + f*4) },
+  simple:  { label: "Simple Mask", fio2FromFlow: f => Math.min(55, 35 + (f-6)*4) },
+  venturi: { label: "Venturi Mask (fixed)", fixed: true },
+  nrb:     { label: "Non-Rebreather", fio2FromFlow: f => Math.min(95, 60 + (f-10)*7) },
+  bvm:     { label: "Bag-Valve-Mask", fio2FromFlow: f => 95 }
+};
+
+/* =====================================================================
+   RESPIRATORY THERAPY MEDICATION FORMULARY
+   Simplified educational effect models — not dosing guidance.
+   apply(state) mutates the current case's cloned mechanics/vent/labs.
+   ===================================================================== */
+const MEDICATIONS = [
+  { id:"albuterol", name:"Albuterol (Salbutamol)", cls:"SABA Bronchodilator",
+    teach:"Beta-2 agonist relaxes bronchial smooth muscle, lowering airway resistance. First-line for bronchospasm. Watch for tachycardia and tremor.",
+    indicated:["asthma","copd","bronchiolitis","cf","anaphylaxis"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.72); state.scenario.hr=Math.min(180,state.scenario.hr+8); } },
+
+  { id:"ipratropium", name:"Ipratropium Bromide", cls:"Anticholinergic Bronchodilator",
+    teach:"Blocks muscarinic receptors to reduce vagally-mediated bronchoconstriction. Synergistic with beta-2 agonists, especially in COPD.",
+    indicated:["copd","asthma","cf"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.87); } },
+
+  { id:"racepi", name:"Racemic Epinephrine (Nebulized)", cls:"Upper-Airway Vasoconstrictor",
+    teach:"Alpha-adrenergic vasoconstriction shrinks mucosal edema in the upper airway. First-line for croup and post-extubation stridor; effect can wear off, so monitor for rebound.",
+    indicated:["croup","epiglottitis"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.6); } },
+
+  { id:"epi_im", name:"Epinephrine (IM/IV)", cls:"Emergency Vasopressor/Bronchodilator",
+    teach:"Alpha-1 vasoconstriction supports blood pressure while beta-2 stimulation bronchodilates and beta-1 increases heart rate/contractility. First-line for anaphylaxis — give immediately, don't wait for IV access.",
+    indicated:["anaphylaxis"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.6); state.scenario.bpS=Math.min(200,state.scenario.bpS+22); state.scenario.bpD=Math.min(120,state.scenario.bpD+12); state.scenario.hr=Math.min(180,state.scenario.hr+15); } },
+
+  { id:"steroid", name:"Corticosteroid (Methylprednisolone/Dexamethasone)", cls:"Anti-Inflammatory",
+    teach:"Reduces airway/mucosal inflammation over hours, not minutes — this simulation shows an accelerated partial effect for teaching purposes. Used broadly across obstructive and inflammatory airway disease.",
+    indicated:["asthma","copd","croup","anaphylaxis","cf","ards"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.92); m.shunt=Math.max(0.03,m.shunt-0.02); } },
+
+  { id:"naloxone", name:"Naloxone", cls:"Opioid Antagonist",
+    teach:"Competitively displaces opioids from receptors, restoring central respiratory drive. Onset within minutes IV — reassess for re-sedation as it wears off before the opioid does. May precipitate acute withdrawal.",
+    indicated:["opioid"],
+    apply(state){ state.scenario.vent.rr=16; state.scenario.vent.vt=460; state.scenario.hr=Math.max(60,state.scenario.hr-6); } },
+
+  { id:"lasix", name:"Furosemide (Lasix)", cls:"Loop Diuretic",
+    teach:"Promotes diuresis to reduce preload and clear alveolar fluid in cardiogenic pulmonary edema — improves both compliance and shunt as flooding resolves.",
+    indicated:["edema"],
+    apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.08,m.shunt-0.14); m.compliance=Math.min(65,m.compliance+9); state.scenario.bpS=Math.max(85,state.scenario.bpS-10); } },
+
+  { id:"bicarb", name:"Sodium Bicarbonate", cls:"Alkalinizing Agent",
+    teach:"Directly raises serum HCO₃⁻. Reserved for severe, refractory acidemia (e.g., pH < 7.1) or specific toxicologic indications like salicylate poisoning (urinary alkalinization) — not routine for DKA, which resolves with fluids and insulin.",
+    indicated:["salicylate","dka"],
+    apply(state){ state.hco3=Math.min(34,state.hco3+6); } },
+
+  { id:"acetazolamide", name:"Acetazolamide", cls:"Carbonic Anhydrase Inhibitor",
+    teach:"Promotes renal bicarbonate excretion, lowering HCO₃⁻ — useful for correcting a chronic compensatory or diuretic-induced metabolic alkalosis (e.g., OHS, post-vomiting) so the respiratory drive isn't blunted.",
+    indicated:["ohs","vomiting"],
+    apply(state){ state.hco3=Math.max(18,state.hco3-4); } },
+
+  { id:"analgesia", name:"Sedation / Analgesia (Fentanyl)", cls:"Opioid Analgesic",
+    teach:"Adequate pain control lets a patient with rib fractures or thoracic trauma breathe deeply again instead of splinting — often improves tidal volume more than any vent change. Balance against respiratory depression risk.",
+    indicated:["flail"],
+    apply(state){ state.scenario.vent.vt=Math.min(550,Math.round(state.scenario.vent.vt*1.28)); state.scenario.vent.rr=Math.max(12,state.scenario.vent.rr-3); } },
+
+  { id:"nmb", name:"Neuromuscular Blockade (Cisatracurium)", cls:"Paralytic",
+    teach:"Eliminates patient-ventilator asynchrony (breath stacking, fighting the vent) in severe ARDS — modestly improves effective compliance and V/Q matching, requiring deep sedation and continuous monitoring alongside it.",
+    indicated:["ards"],
+    apply(state){ const m=state.scenario.mech; m.compliance=Math.min(45,m.compliance+6); m.shunt=Math.max(0.10,m.shunt-0.04); } },
+
+  { id:"ino", name:"Inhaled Nitric Oxide", cls:"Selective Pulmonary Vasodilator",
+    teach:"Dilates vessels only in ventilated lung units, redirecting blood flow toward better-oxygenated alveoli and improving V/Q matching — a rescue therapy for refractory hypoxemia.",
+    indicated:["ards","drowning"],
+    apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.10,m.shunt-0.10); } },
+
+  { id:"mucolytic", name:"Mucolytics + Airway Clearance (Dornase alfa/CPT)", cls:"Secretion Clearance",
+    teach:"Thins tenacious secretions and, paired with chest physiotherapy or oscillatory PEP devices, helps clear the mucus plugging that drives airway resistance in bronchiectasis/CF.",
+    indicated:["cf","bronchiolitis","copd"],
+    apply(state){ const m=state.scenario.mech; m.resistance=Math.max(12,m.resistance*0.85); } },
+
+  { id:"heparin", name:"Anticoagulation (Heparin)", cls:"Anticoagulant",
+    teach:"Doesn't dissolve existing clot, but prevents propagation while the body's own fibrinolysis works — the dead-space physiology of PE improves gradually, not instantly, as perfusion is restored.",
+    indicated:["pe"],
+    apply(state){ const m=state.scenario.mech; m.deadspace=Math.max(0.25,m.deadspace-0.10); } },
+
+  { id:"antibiotics", name:"Empiric Antibiotics", cls:"Antimicrobial",
+    teach:"Treats the underlying infection driving consolidation/sepsis, but real clinical improvement in gas exchange typically takes 24–72 hours — this simulation shows only a token immediate change so you don't mistake antibiotics for a rescue therapy.",
+    indicated:["pneumonia","ards","cf"],
+    apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.10,m.shunt-0.02); } },
+];
+
+
+
+</script>
+<script>
+/* =====================================================================
+   RT-SIM PRO — ENGINE
+   A simplified educational physiology model. Not a clinical device.
+   ===================================================================== */
+
+/* ---------- STATE ---------- */
+let state = {
+  scenarioKey: null,
+  scenario: null,
+  intubated: false,
+  vent: { mode: "vcac", rr: 14, vt: 450, peep: 5, fio2: 40, ps: 10, ie: 2 },
+  o2: { device: "nc", flow: 2 },
+  hco3: 24,
+  demo: { age: 55, sex: "m", height: 68, hb: 14.0 },
+  speed: 2,
+  playing: true,
+  manualHold: false,
+  simSeconds: 0,
+  log: [],
+  quiz: { category: "all", correct: 0, total: 0, currentQ: null },
+  abgTrain: { current: null, correct: 0, total: 0 }
+};
+
+function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function logMsg(msg){
+  state.log.unshift({ t: fmtClock(state.simSeconds), msg });
+  state.log = state.log.slice(0,80);
+  renderLog();
+}
+
+/* ---------- PHYSIOLOGY MODEL ---------- */
+function computeMinuteVentilation(){
+  const m = state.scenario.mech;
+  if(!state.intubated){
+    const rr = state.scenario.vent.rr;
+    const vt = state.scenario.vent.vt;
+    return { mv: (rr*vt)/1000, rr, vt };
+  }
+  const v = state.vent;
+  if(v.mode === "psv"){
+    const estVt = Math.max(150, v.ps * m.compliance * 0.6);
+    const rr = 16;
+    return { mv: (rr*estVt)/1000, rr, vt: Math.round(estVt) };
+  }
+  return { mv: (v.rr*v.vt)/1000, rr: v.rr, vt: v.vt };
+}
+function computeFiO2(){
+  if(!state.intubated){
+    const dev = O2_DEVICES[state.o2.device];
+    if(dev.fixed) return state.scenario.fio2Fixed || 35;
+    if(dev.fio2 !== undefined) return dev.fio2;
+    return dev.fio2FromFlow(state.o2.flow);
+  }
+  return state.vent.fio2;
+}
+function computePeep(){ return state.intubated ? state.vent.peep : 0; }
+
+function runModel(){
+  const m = state.scenario.mech;
+  const { mv: MV, rr, vt } = computeMinuteVentilation();
+  // Elevated airway resistance (bronchospasm, secretions, upper-airway edema) causes air
+  // trapping / wasted ventilation, which behaves like added effective dead space — this is
+  // what lets bronchodilators, steroids, racemic epi, etc. visibly improve PaCO2/pH here.
+  const resistancePenalty = Math.max(0, (m.resistance - 15) / 100) * 0.5;
+  const effDeadspace = clamp(m.deadspace + resistancePenalty, 0.15, 0.75);
+  const VA = Math.max(0.8, MV * (1 - effDeadspace));
+  const K = 168 * m.vco2;
+  let paco2 = clamp(K / VA, 15, 130);
+
+  const fio2 = computeFiO2()/100;
+  const peep = computePeep();
+  const peepReliefFraction = clamp((peep/20) * m.peepResponsive, 0, 0.75);
+  const effShunt = clamp(m.shunt * (1 - peepReliefFraction), 0.02, 0.6);
+  const pao2_alv = 713*fio2 - paco2/0.8;
+  let pao2 = clamp(pao2_alv * (1 - effShunt), 35, 620);
+
+  const hco3 = state.hco3;
+  let ph = clamp(6.1 + Math.log10(hco3/(0.03*paco2)), 6.7, 7.75);
+
+  const p3 = Math.pow(pao2,3);
+  let spo2 = clamp(100 * (p3 + 150*pao2) / (p3 + 150*pao2 + 23400), 40, 100);
+  const etco2 = clamp(paco2 - (m.deadspace*22), 10, paco2);
+
+  const s = state.scenario;
+  let hr = s.hr;
+  if(spo2 < 90) hr += (90-spo2)*1.8;
+  if(spo2 < 70) hr -= (70-spo2)*2.2;
+  if(ph < 7.3) hr += (7.3-ph)*140;
+  hr = clamp(Math.round(hr), 35, 175);
+
+  let bpS = s.bpS, bpD = s.bpD;
+  const peepPenalty = state.intubated ? peep*1.1*(0.5+m.peepResponsive*0.3) : 0;
+  bpS = clamp(Math.round(bpS - peepPenalty), 60, 220);
+  bpD = clamp(Math.round(bpD - peepPenalty*0.6), 35, 130);
+
+  const fio2pct = fio2*100;
+  const pf = Math.round(pao2/fio2);
+  const hb = state.demo.hb;
+  const cao2 = +((hb*1.34*(spo2/100)) + (pao2*0.003)).toFixed(1);
+  const aaGrad = Math.max(0, Math.round((fio2*713 - paco2/0.8) - pao2));
+
+  return { paco2: Math.round(paco2*10)/10, pao2: Math.round(pao2), ph: Math.round(ph*1000)/1000,
+    hco3: Math.round(hco3*10)/10, spo2: Math.round(spo2), etco2: Math.round(etco2),
+    hr, bpS, bpD, mv: Math.round(MV*100)/100, rr, vt, fio2: Math.round(fio2pct), peep,
+    pf, cao2, aaGrad };
+}
+
+function applyRenalCompensation(){
+  const g = runModel();
+  const target = 24 + 0.4*(g.paco2-40);
+  state.hco3 = state.hco3 + (target - state.hco3)*0.35;
+  logMsg(`Advanced simulated time — renal compensation nudging HCO₃⁻ toward ${Math.round(target*10)/10}.`);
+}
+
+/* ---------- SCENARIO LOADING ---------- */
+function ibwKg(){
+  const base = state.demo.sex==="m" ? 50 : 45.5;
+  return Math.max(30, base + 2.3*(state.demo.height-60));
+}
+
+function loadScenario(key){
+  const s = SCENARIOS[key];
+  if(!s) return;
+  state.scenarioKey = key;
+  state.scenario = { ...s, mech: { ...s.mech }, vent: { ...s.vent } };
+  state.intubated = s.intubated;
+  state.vent = {...s.vent};
+  state.o2 = { device: s.device || "nc", flow: s.flow || 2 };
+  state.hco3 = s.hco3Base;
+  state.demo.hb = 14.0;
+  state.simSeconds = 0;
+  state.manualHold = false;
+  logMsg(`Loaded scenario: ${s.name}.`);
+  seedHistory();
+  renderLeftSidebar();
+  renderAll();
+}
+
+function fmtClock(totalSeconds){
+  const totalMin = Math.floor(totalSeconds/60);
+  const h = Math.floor(totalMin/60).toString().padStart(2,"0");
+  const m = (totalMin%60).toString().padStart(2,"0");
+  return `t+${h}:${m}`;
+}
+
+/* =====================================================================
+   LEFT SIDEBAR — Patient / Scenario / Vent Controls / Overlays
+   ===================================================================== */
+function renderLeftSidebar(){
+  const el = document.getElementById("leftSidebarBody");
+  const s = state.scenario;
+  let html = "";
+
+  html += `<div>
+    <div class="sec-hd indigo"><span>Patient & Case</span>👤</div>
+    <div class="d-card" style="display:flex;flex-direction:column;gap:8px;">
+      ${s ? `<div style="font-size:11px;color:var(--text2);line-height:1.5;"><b style="color:#818cf8;">${s.name}</b><br>${s.history}</div>` : `<div style="font-size:11px;color:var(--muted);">No case loaded.</div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div><label class="f-lbl">Age</label><input type="number" id="demoAge" value="${state.demo.age}" class="f-inp"></div>
+        <div><label class="f-lbl">Sex</label><select id="demoSex" class="f-inp"><option value="m" ${state.demo.sex==="m"?"selected":""}>M</option><option value="f" ${state.demo.sex==="f"?"selected":""}>F</option></select></div>
+        <div><label class="f-lbl">Height (in)</label><input type="number" id="demoHeight" value="${state.demo.height}" class="f-inp"></div>
+        <div><label class="f-lbl">Hb (g/dL)</label><input type="number" step="0.1" id="demoHb" value="${state.demo.hb}" class="f-inp"></div>
+      </div>
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd sky"><span>Respiratory Therapy Controls</span>🎛</div>
+    <div class="d-card" style="display:flex;flex-direction:column;gap:8px;" id="ventControlsCard">
+      ${renderVentControlsInner()}
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd purple"><span>Lung Mechanics & Physiology</span>🫁</div>
+    <div class="d-card" style="display:flex;flex-direction:column;gap:8px;" id="mechCard">
+      ${renderMechInner()}
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd green"><span>Medications</span>💊</div>
+    <div class="d-card" style="display:flex;flex-direction:column;gap:2px;" id="medsCard">
+      ${renderMedicationsInner()}
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd rose"><span>Manual Override — Solve the Case</span>✍️</div>
+    <div class="d-card" style="display:flex;flex-direction:column;gap:8px;" id="manualEntryCard">
+      ${renderManualEntryInner()}
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd amber"><span>Normal Reference Ranges</span>📏</div>
+    <div class="d-card" id="referenceRangesCard"></div>
+  </div>`;
+
+  html += `<div>
+    <div class="sec-hd rose"><span>Advance Time</span>⏱</div>
+    <div class="d-card">
+      <button class="btn-primary" id="btnAdvanceTime" style="background:#3a1a0d;border:1px solid #f59e0b;color:#fbbf24;">Renal Compensation Step</button>
+      <div style="font-size:9px;color:var(--muted);margin-top:6px;line-height:1.5;">Nudges HCO₃⁻ toward the value that would compensate the current PaCO₂ — models slow renal response.</div>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+  wireLeftSidebar();
+}
+
+function renderVentControlsInner(){
+  if(!state.scenario) return `<div style="font-size:11px;color:var(--muted);">Choose a case above to begin.</div>`;
+  if(!state.intubated){
+    return `
+      <div><label class="f-lbl">Delivery Device</label>
+        <select id="selDevice" class="f-inp">
+          ${Object.entries(O2_DEVICES).map(([k,v])=>`<option value="${k}" ${state.o2.device===k?"selected":""}>${v.label}</option>`).join("")}
+        </select>
+      </div>
+      <div id="flowFieldWrap"><label class="f-lbl">Flow Rate — <b id="flowVal" style="color:#4ade80;">${state.o2.flow} L/min</b></label>
+        <input type="range" class="f-range" id="rngFlow" min="0" max="15" step="1" value="${state.o2.flow}"></div>
+      <div><label class="f-lbl">Estimated FiO₂</label><div class="f-inp" style="color:#fb923c;font-weight:700;">${computeFiO2()}%</div></div>
+      <button class="btn-primary" id="btnIntubate">Intubate Patient</button>
+      <button class="btn-primary btn-danger" id="btnResetVent">Reset to Case Defaults</button>`;
+  }
+  const v = state.vent;
+  return `
+    <div><label class="f-lbl">Mode</label>
+      <select id="selMode" class="f-inp">
+        <option value="vcac" ${v.mode==="vcac"?"selected":""}>Volume Control – A/C</option>
+        <option value="pcac" ${v.mode==="pcac"?"selected":""}>Pressure Control – A/C</option>
+        <option value="simv" ${v.mode==="simv"?"selected":""}>SIMV</option>
+        <option value="psv" ${v.mode==="psv"?"selected":""}>PSV / CPAP</option>
+      </select></div>
+    <div><label class="f-lbl">Respiratory Rate — <b id="rrVal" style="color:#fb923c;">${v.rr}/min</b></label><input type="range" class="f-range" id="rngRR" min="6" max="35" step="1" value="${v.rr}"></div>
+    ${v.mode!=="psv" ? `<div><label class="f-lbl">Tidal Volume — <b id="vtVal" style="color:#4ade80;">${v.vt} mL</b></label><input type="range" class="f-range" id="rngVT" min="200" max="700" step="10" value="${v.vt}"></div>`
+      : `<div><label class="f-lbl">Pressure Support — <b id="psVal" style="color:#4ade80;">${v.ps} cmH₂O</b></label><input type="range" class="f-range" id="rngPS" min="0" max="25" step="1" value="${v.ps}"></div>`}
+    <div><label class="f-lbl">PEEP — <b id="peepVal" style="color:#c084fc;">${v.peep} cmH₂O</b></label><input type="range" class="f-range" id="rngPEEP" min="0" max="20" step="1" value="${v.peep}"></div>
+    <div><label class="f-lbl">FiO₂ — <b id="fio2Val" style="color:#f472b6;">${v.fio2}%</b></label><input type="range" class="f-range" id="rngFiO2" min="21" max="100" step="1" value="${v.fio2}"></div>
+    <div><label class="f-lbl">I:E Ratio — <b id="ieVal" style="color:#38bdf8;">1:${v.ie}</b></label><input type="range" class="f-range" id="rngIE" min="1" max="5" step="0.5" value="${v.ie}"></div>
+    <button class="btn-primary btn-danger" id="btnExtubate">Extubate</button>
+    <button class="btn-primary" id="btnResetVent" style="background:#0d2a1a;border:1px solid #22c55e;color:#4ade80;">Reset to Case Defaults</button>`;
+}
+
+function renderManualEntryInner(){
+  if(!state.scenario) return `<div style="font-size:11px;color:var(--muted);">Choose a case above to begin.</div>`;
+  const tail = history.length ? history[history.length-1] : null;
+  const g = tail || runModel();
+  const modeLine = state.manualHold
+    ? `<div style="font-size:9px;font-family:var(--mono);color:#fbbf24;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">● MANUAL HOLD — auto simulation paused</div>`
+    : `<div style="font-size:9px;font-family:var(--mono);color:#4ade80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">● AUTO SIMULATION — driven by vent/O₂ controls</div>`;
+  return `
+    ${modeLine}
+    <div style="font-size:9px;color:var(--muted);line-height:1.5;margin-bottom:2px;">Type in exactly what you'd measure or calculate to work the case yourself. Recording a value pauses auto simulation so your numbers stick.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      <div><label class="f-lbl">pH</label><input type="number" step="0.01" id="mPH" value="${g.ph.toFixed(2)}" class="f-inp" style="color:#f59e0b;"></div>
+      <div><label class="f-lbl">PaCO₂ (mmHg)</label><input type="number" id="mCO2" value="${Math.round(g.paco2)}" class="f-inp" style="color:#2dd4bf;"></div>
+      <div><label class="f-lbl">PaO₂ (mmHg)</label><input type="number" id="mO2" value="${Math.round(g.pao2)}" class="f-inp" style="color:#f43f5e;"></div>
+      <div><label class="f-lbl">HCO₃⁻ (mEq/L)</label><input type="number" step="0.1" id="mHCO3" value="${g.hco3.toFixed(1)}" class="f-inp" style="color:#c084fc;"></div>
+      <div><label class="f-lbl">SpO₂ (%)</label><input type="number" id="mSpO2" value="${Math.round(g.spo2)}" class="f-inp" style="color:#34d399;"></div>
+      <div><label class="f-lbl">RR (/min)</label><input type="number" id="mRR" value="${Math.round(g.rr)}" class="f-inp" style="color:#fb923c;"></div>
+      <div><label class="f-lbl">VT (mL)</label><input type="number" id="mVT" value="${Math.round(g.vt)}" class="f-inp" style="color:#4ade80;"></div>
+      <div><label class="f-lbl">FiO₂ (%)</label><input type="number" id="mFiO2" value="${Math.round(g.fio2)}" class="f-inp" style="color:#f472b6;"></div>
+    </div>
+    <div style="font-size:9px;color:var(--muted);margin-top:2px;">VE, P/F, and CaO₂ are calculated automatically from the values above and your Hb.</div>
+    <button class="btn-primary" id="btnPushManual" style="background:#3a1010;border:1px solid #ef4444;color:#f87171;">Record Manual Entry</button>
+    ${state.manualHold ? `<button class="btn-primary" id="btnResumeAuto" style="background:#0d2a1a;border:1px solid #22c55e;color:#4ade80;">Resume Auto Simulation</button>` : ``}`;
+}
+
+function recordManualEntry(){
+  const ph = clamp(+document.getElementById("mPH").value, 6.7, 7.8);
+  const paco2 = clamp(+document.getElementById("mCO2").value, 10, 140);
+  const pao2 = clamp(+document.getElementById("mO2").value, 20, 650);
+  const hco3 = clamp(+document.getElementById("mHCO3").value, 5, 50);
+  const spo2 = clamp(+document.getElementById("mSpO2").value, 30, 100);
+  const rr = clamp(+document.getElementById("mRR").value, 0, 60);
+  const vt = clamp(+document.getElementById("mVT").value, 0, 1000);
+  const fio2 = clamp(+document.getElementById("mFiO2").value, 21, 100);
+  const hb = state.demo.hb || 14;
+
+  const mv = +((rr*vt)/1000).toFixed(2);
+  const pf = Math.round(pao2/(fio2/100));
+  const cao2 = +((hb*1.34*(spo2/100)) + (pao2*0.003)).toFixed(1);
+  const aaGrad = Math.max(0, Math.round(((fio2/100)*713 - paco2/0.8) - pao2));
+
+  const lastT = history.length ? history[history.length-1].time : 0;
+  const newT = lastT + 60*state.speed;
+  const frame = { time:newT, ph, paco2, pao2, hco3, spo2, rr, vt, mv, fio2, peep: state.intubated?state.vent.peep:0, hr: (history.length?history[history.length-1].hr:state.scenario.hr), bpS: (history.length?history[history.length-1].bpS:state.scenario.bpS), bpD: (history.length?history[history.length-1].bpD:state.scenario.bpD), etco2: Math.round(paco2*0.9), pf, cao2, aaGrad };
+
+  history.push(frame);
+  if(history.length>300) history.shift();
+
+  VCHART_DEFS.forEach(d=>{
+    vCharts[d.key].series.update({ time:frame.time, value:frame[d.field] });
+    updatePaneDisplay(d, frame[d.field]);
+  });
+
+  state.hco3 = hco3;
+  if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
+  state.manualHold = true;
+  state.simSeconds += 60*state.speed;
+  document.getElementById("simClock").textContent = fmtClock(state.simSeconds);
+
+  logMsg(`Manual entry recorded — pH ${ph.toFixed(2)}, PaCO₂ ${paco2}, PaO₂ ${pao2}, HCO₃⁻ ${hco3.toFixed(1)}, SpO₂ ${spo2}%, RR ${rr}, VT ${vt} mL, FiO₂ ${fio2}%.`);
+  renderRightSidebar(frame);
+  document.getElementById("manualEntryCard").innerHTML = renderManualEntryInner();
+  wireManualEntry();
+}
+
+function resumeAutoSim(){
+  state.manualHold = false;
+  logMsg("Resumed auto simulation — driven by current vent/O₂ controls.");
+  startTicking();
+  document.getElementById("manualEntryCard").innerHTML = renderManualEntryInner();
+  wireManualEntry();
+}
+
+function wireManualEntry(){
+  const btn = document.getElementById("btnPushManual");
+  if(btn) btn.onclick = recordManualEntry;
+  const resumeBtn = document.getElementById("btnResumeAuto");
+  if(resumeBtn) resumeBtn.onclick = resumeAutoSim;
+}
+
+function renderMedicationsInner(){
+  if(!state.scenario) return `<div style="font-size:11px;color:var(--muted);">Choose a case above to begin.</div>`;
+  const sorted = [...MEDICATIONS].sort((a,b)=>{
+    const ai = a.indicated.includes(state.scenarioKey) ? 0 : 1;
+    const bi = b.indicated.includes(state.scenarioKey) ? 0 : 1;
+    return ai - bi;
+  });
+  return `<div style="font-size:9px;color:var(--muted);line-height:1.5;margin-bottom:4px;">Meds tagged <span style="color:#4ade80;font-weight:700;">INDICATED</span> are commonly used for this case — but you can try any of them and see what happens.</div>` +
+    sorted.map(med=>{
+      const indicated = med.indicated.includes(state.scenarioKey);
+      return `<div class="med-row">
+        <div class="med-info">
+          <div class="med-name">${med.name} ${indicated?'<span class="med-badge">Indicated</span>':''}</div>
+          <div class="med-cls">${med.cls}</div>
+          <div class="med-teach">${med.teach}</div>
+        </div>
+        <button class="btn-primary med-btn" data-med="${med.id}" style="${indicated ? 'background:#0d2a1a;border:1px solid #22c55e;color:#4ade80;' : 'background:#0d1520;border:1px solid var(--border);color:var(--text2);'}">Give</button>
+      </div>`;
+    }).join('');
+}
+
+function administerMed(id){
+  const med = MEDICATIONS.find(m=>m.id===id);
+  if(!med || !state.scenario) return;
+  med.apply(state);
+
+  const lastT = history.length ? history[history.length-1].time : 0;
+  const newT = lastT + 30;
+  const frame = computeFrame(newT);
+  history.push(frame);
+  if(history.length>300) history.shift();
+
+  VCHART_DEFS.forEach(d=>{
+    vCharts[d.key].series.update({ time:frame.time, value:frame[d.field] });
+    updatePaneDisplay(d, frame[d.field]);
+  });
+
+  state.simSeconds += 30;
+  document.getElementById("simClock").textContent = fmtClock(state.simSeconds);
+  renderRightSidebar(frame);
+
+  const indicated = med.indicated.includes(state.scenarioKey);
+  logMsg(`💊 Administered ${med.name}${indicated ? '' : ' — not typically indicated for this presentation, review your rationale'}. ${med.teach}`);
+
+  document.getElementById("medsCard").innerHTML = renderMedicationsInner();
+  wireMedications();
+}
+
+function wireMedications(){
+  document.querySelectorAll(".med-btn").forEach(btn=>{
+    btn.onclick = () => administerMed(btn.dataset.med);
+  });
+}
+
+const MECH_DEFS = [
+  { key:'compliance', group:'mech', label:'Compliance', unit:'mL/cmH₂O', min:10, max:70, step:1, color:'#4ade80' },
+  { key:'resistance', group:'mech', label:'Airway Resistance', unit:'cmH₂O/L/s', min:5, max:50, step:1, color:'#fb923c' },
+  { key:'shunt', group:'mech', label:'Shunt Fraction', unit:'%', min:0, max:60, step:1, color:'#f43f5e', scale:100 },
+  { key:'deadspace', group:'mech', label:'Dead Space Fraction', unit:'%', min:10, max:70, step:1, color:'#38bdf8', scale:100 },
+  { key:'vco2', group:'mech', label:'CO₂ Production', unit:'× normal', min:0.7, max:1.6, step:0.05, color:'#c084fc' },
+  { key:'peepResponsive', group:'mech', label:'PEEP Responsiveness', unit:'%', min:0, max:100, step:5, color:'#facc15', scale:100 },
+  { key:'hr', group:'scenario', label:'Baseline Heart Rate', unit:'bpm', min:40, max:180, step:1, color:'#34d399' },
+  { key:'bpS', group:'scenario', label:'Baseline BP — Systolic', unit:'mmHg', min:60, max:200, step:1, color:'#c084fc' },
+  { key:'bpD', group:'scenario', label:'Baseline BP — Diastolic', unit:'mmHg', min:35, max:120, step:1, color:'#c084fc' },
+  { key:'temp', group:'scenario', label:'Temperature', unit:'°C', min:35, max:41, step:0.1, color:'#fb923c' },
+];
+
+function renderMechInner(){
+  if(!state.scenario) return `<div style="font-size:11px;color:var(--muted);">Choose a case above to begin.</div>`;
+  const s = state.scenario;
+  return `<div style="font-size:9px;color:var(--muted);line-height:1.5;margin-bottom:2px;">These are the disease mechanics driving the case — drag any slider to make the lungs/heart sicker or healthier and watch the charts respond.</div>` +
+    MECH_DEFS.map(d=>{
+      const raw = d.group==='mech' ? s.mech[d.key] : s[d.key];
+      const shown = d.scale ? Math.round(raw*d.scale) : raw;
+      return `<div><label class="f-lbl">${d.label} — <b id="mechval-${d.key}" style="color:${d.color};">${shown}${d.unit?(' '+d.unit):''}</b></label>
+        <input type="range" class="f-range" id="mech-${d.key}" data-group="${d.group}" min="${d.min*(d.scale||1)}" max="${d.max*(d.scale||1)}" step="${d.step*(d.scale||1)}" value="${shown}"></div>`;
+    }).join('');
+}
+
+function wireMech(){
+  MECH_DEFS.forEach(d=>{
+    const el = document.getElementById('mech-'+d.key);
+    if(!el) return;
+    el.oninput = e => {
+      const raw = +e.target.value / (d.scale||1);
+      if(d.group==='mech') state.scenario.mech[d.key] = raw;
+      else state.scenario[d.key] = raw;
+      document.getElementById('mechval-'+d.key).textContent = `${+e.target.value}${d.unit?(' '+d.unit):''}`;
+      updateLiveTail();
+    };
+  });
+}
+
+// Live-preview the most recent chart bar against current controls without advancing sim time —
+// gives instant visual feedback the moment any slider (vent, O2, or mechanics) moves.
+function updateLiveTail(){
+  if(!state.scenario || state.manualHold || !history.length) return;
+  const frame = computeFrame(history[history.length-1].time);
+  history[history.length-1] = frame;
+  VCHART_DEFS.forEach(d=>{
+    vCharts[d.key].series.update({ time:frame.time, value:frame[d.field] });
+    updatePaneDisplay(d, frame[d.field]);
+  });
+  renderRightSidebar(frame);
+}
+
+function wireLeftSidebar(){
+  document.getElementById("caseSelect").onchange = e => loadScenario(e.target.value);
+  document.getElementById("demoAge").oninput = e => state.demo.age = +e.target.value;
+  document.getElementById("demoSex").onchange = e => { state.demo.sex = e.target.value; };
+  document.getElementById("demoHeight").oninput = e => { state.demo.height = +e.target.value; };
+  document.getElementById("demoHb").oninput = e => { state.demo.hb = +e.target.value; updateLiveTail(); };
+  renderReferenceRanges();
+
+  if(!state.scenario) return;
+  document.getElementById("btnAdvanceTime").onclick = () => { applyRenalCompensation(); renderRightSidebar(runModel()); };
+  wireVentControls();
+  wireMech();
+  wireMedications();
+  wireManualEntry();
+}
+
+function renderReferenceRanges(){
+  const card = document.getElementById("referenceRangesCard");
+  if(!card) return;
+  card.innerHTML = VCHART_DEFS.map(d=>{
+    const range = d.highOk ? `≥ ${d.min}` : `${d.min}–${d.max}`;
+    return `<div class="math-row"><span class="math-lbl" style="color:${d.color};">${d.label}</span><span class="math-val" style="color:var(--text2);font-weight:500;">${range} ${d.unit}</span></div>`;
+  }).join("");
+}
+
+function wireVentControls(){
+  const card = document.getElementById("ventControlsCard");
+  if(!state.intubated){
+    const selDevice = document.getElementById("selDevice");
+    const rngFlow = document.getElementById("rngFlow");
+    selDevice.onchange = e => { state.o2.device = e.target.value; logMsg(`Switched O₂ device to ${O2_DEVICES[state.o2.device].label}.`); card.innerHTML = renderVentControlsInner(); wireVentControls(); updateLiveTail(); };
+    if(rngFlow) rngFlow.oninput = e => { state.o2.flow = +e.target.value; document.getElementById("flowVal").textContent = state.o2.flow+" L/min"; updateLiveTail(); };
+    document.getElementById("btnIntubate").onclick = () => {
+      state.intubated = true;
+      state.vent = {...state.scenario.vent};
+      logMsg(`Patient intubated. Ventilator initiated: ${state.vent.mode.toUpperCase()}, RR ${state.vent.rr}, Vt ${state.vent.vt} mL, PEEP ${state.vent.peep}, FiO₂ ${state.vent.fio2}%.`);
+      card.innerHTML = renderVentControlsInner(); wireVentControls(); updateLiveTail();
+    };
+  } else {
+    document.getElementById("selMode").onchange = e => { state.vent.mode = e.target.value; logMsg(`Ventilator mode changed to ${e.target.value.toUpperCase()}.`); card.innerHTML = renderVentControlsInner(); wireVentControls(); updateLiveTail(); };
+    document.getElementById("rngRR").oninput = e => { state.vent.rr = +e.target.value; document.getElementById("rrVal").textContent = state.vent.rr+"/min"; updateLiveTail(); };
+    const vt = document.getElementById("rngVT"); if(vt) vt.oninput = e => { state.vent.vt = +e.target.value; document.getElementById("vtVal").textContent = state.vent.vt+" mL"; updateLiveTail(); };
+    const ps = document.getElementById("rngPS"); if(ps) ps.oninput = e => { state.vent.ps = +e.target.value; document.getElementById("psVal").textContent = state.vent.ps+" cmH₂O"; updateLiveTail(); };
+    document.getElementById("rngPEEP").oninput = e => { state.vent.peep = +e.target.value; document.getElementById("peepVal").textContent = state.vent.peep+" cmH₂O"; updateLiveTail(); };
+    document.getElementById("rngFiO2").oninput = e => { state.vent.fio2 = +e.target.value; document.getElementById("fio2Val").textContent = state.vent.fio2+"%"; updateLiveTail(); };
+    document.getElementById("rngIE").oninput = e => { state.vent.ie = +e.target.value; document.getElementById("ieVal").textContent = "1:"+state.vent.ie; updateLiveTail(); };
+    document.getElementById("btnExtubate").onclick = () => { state.intubated = false; logMsg("Patient extubated."); card.innerHTML = renderVentControlsInner(); wireVentControls(); updateLiveTail(); };
+  }
+  document.getElementById("btnResetVent").onclick = () => {
+    const s = SCENARIOS[state.scenarioKey];
+    state.scenario = { ...s, mech: { ...s.mech }, vent: { ...s.vent } };
+    state.intubated = s.intubated;
+    state.vent = {...s.vent};
+    state.o2 = { device: s.device || "nc", flow: s.flow || 2 };
+    state.hco3 = s.hco3Base;
+    logMsg("Settings reset to case defaults (vent, O₂, lung mechanics, and hemodynamics).");
+    if(state.manualHold){ state.manualHold = false; startTicking(); }
+    card.innerHTML = renderVentControlsInner(); wireVentControls();
+    document.getElementById("mechCard").innerHTML = renderMechInner(); wireMech();
+    document.getElementById("medsCard").innerHTML = renderMedicationsInner(); wireMedications();
+    document.getElementById("manualEntryCard").innerHTML = renderManualEntryInner(); wireManualEntry();
+    updateLiveTail();
+  };
+}
+
+/* =====================================================================
+   RIGHT SIDEBAR — Vitals Board / Formula Engine / ABG 4-Step / AIDR / Playbook
+   ===================================================================== */
+const VITALS_DEF = [
+  { id:'pH', label:'pH', unit:'', min:7.35, max:7.45, low:7.20, high:7.60, color:'#f59e0b' },
+  { id:'PaCO2', label:'PaCO₂', unit:'mmHg', min:35, max:45, low:20, high:80, color:'#2dd4bf' },
+  { id:'PaO2', label:'PaO₂', unit:'mmHg', min:80, low:55, color:'#f43f5e', highOk:true },
+  { id:'HCO3', label:'HCO₃⁻', unit:'mEq/L', min:22, max:26, low:12, high:36, color:'#c084fc' },
+  { id:'SpO2', label:'SpO₂', unit:'%', min:95, low:88, color:'#34d399', highOk:true },
+  { id:'RR', label:'RR', unit:'/min', min:12, max:20, low:6, high:35, color:'#fb923c' },
+  { id:'VT', label:'VT', unit:'mL', min:350, max:600, low:200, high:800, color:'#4ade80' },
+  { id:'VE', label:'VE', unit:'L/min', min:5, max:10, low:2, high:20, color:'#38bdf8' },
+  { id:'PF', label:'P/F Ratio', unit:'', min:300, low:150, color:'#38bdf8', highOk:true },
+  { id:'CaO2', label:'CaO₂', unit:'mL/dL', min:15, low:8, color:'#f472b6', highOk:true },
+];
+function getVitalStatus(def, val){
+  if(val==null||isNaN(val)) return 'none';
+  if(def.highOk){
+    if(val<def.low) return 'crit';
+    if(val<def.min) return 'warn';
+    return 'ok';
+  }
+  if(val<def.low||val>def.high) return 'crit';
+  if(val<def.min||val>def.max) return 'warn';
+  return 'ok';
+}
+function fmtNum(v,dec=1){ if(v==null||isNaN(v)) return '--'; return Number.isInteger(v)?v+'':v.toFixed(dec); }
+
+function renderRightSidebar(g){
+  const el = document.getElementById("rightSidebarBody");
+  if(!g){
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:20px;text-align:center;">Choose a case in the top bar to begin monitoring.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div><div class="sec-hd green"><span>Live Vitals Board</span>📈</div><div class="d-card" id="vitalsBoardContainer"></div></div>
+    <div><div class="sec-hd green"><span>Formula Engine</span>🔢</div><div class="d-card">
+      <div class="math-row"><span class="math-lbl">PBW</span><span class="math-val" style="color:#e2e8f0;">${ibwKg().toFixed(1)} kg</span></div>
+      <div class="math-row"><span class="math-lbl">Target VT (6–8 mL/kg)</span><span class="math-val" style="color:#fbbf24;">${Math.round(ibwKg()*6)}–${Math.round(ibwKg()*8)} mL</span></div>
+      <div class="math-row"><span class="math-lbl">Min. Vent (VE)</span><span class="math-val" style="color:#38bdf8;">${g.mv} L/min</span></div>
+      <div class="math-row"><span class="math-lbl">O₂ Content (CaO₂)</span><span class="math-val" style="color:#f472b6;">${g.cao2} mL/dL</span></div>
+      <div class="math-row"><span class="math-lbl">A-a Gradient</span><span class="math-val" style="color:#fb923c;">${g.aaGrad} mmHg</span></div>
+      <div class="math-row"><span class="math-lbl">P/F Ratio</span><span class="math-val" style="color:#38bdf8;">${g.pf}</span></div>
+    </div></div>
+    <div><div class="sec-hd rose"><span>4-Step ABG Interpretation</span>🩺</div><div class="d-card" id="abgStepsContainer"></div></div>
+    <div><div class="sec-hd purple"><span>AIDR Clinical Framework</span>🔄</div><div class="d-card" id="aidrContainer"></div></div>
+    <div><div class="sec-hd sky"><span>RT Action Playbook</span>📋</div><div class="d-card" id="actionPlaybook"></div></div>
+  `;
+  renderVitalsBoard(g);
+  renderABG4Step(g);
+  renderAIDR(g);
+}
+
+function renderVitalsBoard(g){
+  const vals = { pH:g.ph, PaCO2:g.paco2, PaO2:g.pao2, HCO3:g.hco3, SpO2:g.spo2, RR:g.rr, VT:g.vt, VE:g.mv, PF:g.pf, CaO2:g.cao2 };
+  document.getElementById('vitalsBoardContainer').innerHTML = VITALS_DEF.map(def=>{
+    const v = vals[def.id];
+    const status = getVitalStatus(def,v);
+    const badgeClass = status==='crit'?'badge-crit':status==='warn'?'badge-warn':status==='ok'?'badge-ok':'';
+    const badgeText = status==='crit'?'CRIT':status==='warn'?'WARN':status==='ok'?'OK':'--';
+    const displayVal = def.id==='pH'?fmtNum(v,2):(def.id==='VE'||def.id==='CaO2')?fmtNum(v,1):fmtNum(v,0);
+    return `<div class="ind-row">
+      <div class="ind-dot" style="background:${def.color}"></div>
+      <span class="ind-name">${def.label}<span style="color:var(--muted);font-size:9px;"> ${def.unit}</span></span>
+      <span class="ind-val" style="color:${status==='crit'?'#ef4444':status==='warn'?'#fbbf24':status==='ok'?'#4ade80':'var(--muted)'}">${displayVal}</span>
+      ${status!=='none'?`<span class="ind-badge ${badgeClass}">${badgeText}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderABG4Step(g){
+  const pH=g.ph, pco2=g.paco2, hco3=g.hco3;
+  const steps = [];
+  let phTag,phResult;
+  if(pH<7.35){phTag='bad';phResult='Acidemia (pH < 7.35)';} else if(pH>7.45){phTag='bad';phResult='Alkalemia (pH > 7.45)';} else {phTag='ok';phResult='Normal pH (7.35–7.45)';}
+  steps.push({n:'1',label:'Look at pH',detail:`pH = ${fmtNum(pH,2)}`,result:phResult,tag:phTag});
+  let co2Tag,co2Result;
+  if(pco2>45){co2Tag='bad';co2Result='Resp Acidosis — Hypoventilation';} else if(pco2<35){co2Tag='warn';co2Result='Resp Alkalosis — Hyperventilation';} else {co2Tag='ok';co2Result='PaCO₂ Normal (35–45 mmHg)';}
+  steps.push({n:'2',label:'Look at PaCO₂',detail:`PaCO₂ = ${fmtNum(pco2,0)} mmHg`,result:co2Result,tag:co2Tag});
+  let hco3Tag,hco3Result;
+  if(hco3<22){hco3Tag='bad';hco3Result='Metabolic Acidosis (HCO₃⁻ < 22)';} else if(hco3>26){hco3Tag='warn';hco3Result='Metabolic Alkalosis (HCO₃⁻ > 26)';} else {hco3Tag='ok';hco3Result='HCO₃⁻ Normal (22–26 mEq/L)';}
+  steps.push({n:'3',label:'Look at HCO₃⁻',detail:`HCO₃⁻ = ${fmtNum(hco3,1)} mEq/L`,result:hco3Result,tag:hco3Tag});
+  let primary='',action='',decidTag='ok';
+  if(pH<7.35 && pco2>45){ primary = hco3>26?'Compensated Resp Acidosis':'Acute Resp Acidosis'; action='Consider NIV/BiPAP, ↑RR or VT'; decidTag='bad'; }
+  else if(pH<7.35 && hco3<22){ primary='Metabolic Acidosis ± Resp component'; action='Investigate cause · correct electrolytes'; decidTag='bad'; }
+  else if(pH>7.45 && pco2<35){ primary = hco3<22?'Compensated Resp Alkalosis':'Acute Resp Alkalosis'; action='↓RR or VT · treat underlying cause'; decidTag='warn'; }
+  else if(pH>7.45 && hco3>26){ primary='Metabolic Alkalosis'; action='Review diuretics/steroids · correct Cl⁻'; decidTag='warn'; }
+  else { primary='Normal ABG or Fully Compensated'; action='Continue routine monitoring'; decidTag='ok'; }
+  if(g.pf < 150){ action='🚨 ESCALATE — Severe ARDS pattern (P/F < 150). Consider intubation.'; decidTag='bad'; }
+  steps.push({n:'4',label:'Decide Action',detail:primary,result:action,tag:decidTag});
+  document.getElementById('abgStepsContainer').innerHTML = steps.map(s=>`
+    <div class="abg-step"><div class="step-circle active">${s.n}</div><div class="step-body">
+      <div class="step-label">${s.label}</div><div class="step-result">${s.detail}</div>
+      <div><span class="step-tag tag-${s.tag}">${s.result}</span></div></div></div>`).join('');
+}
+
+function renderAIDR(g){
+  const pH=g.ph, pco2=g.paco2, pO2=g.pao2, spO2=g.spo2, pf=g.pf, rr=g.rr;
+  const issues=[];
+  if(pO2<80) issues.push(pO2<60?`⚠ PaO₂ ${fmtNum(pO2,0)} — Severe hypoxemia`:`PaO₂ ${fmtNum(pO2,0)} — Hypoxemia`);
+  if(spO2<95) issues.push(spO2<88?`⚠ SpO₂ ${fmtNum(spO2,0)}% — Critical`:`SpO₂ ${fmtNum(spO2,0)}% — Low`);
+  if(pf<300) issues.push(pf<200?`⚠ P/F ${fmtNum(pf,0)} — Moderate/Severe ARDS`:`P/F ${fmtNum(pf,0)} — Gas exchange impaired`);
+  if(pco2>45) issues.push(pco2>55?`⚠ PaCO₂ ${fmtNum(pco2,0)} — Hypercapnic failure`:`PaCO₂ ${fmtNum(pco2,0)} — Hypoventilation`);
+  if(rr>25) issues.push(`RR ${fmtNum(rr,0)} — Tachypnea, assess fatigue`);
+  if(pH<7.35) issues.push(pH<7.25?`⚠ pH ${fmtNum(pH,2)} — Severe acidemia`:`pH ${fmtNum(pH,2)} — Acidemia`);
+  const assessText = issues.length ? issues.join('<br>') : '✓ No acute abnormalities detected';
+
+  const hasOxy = pO2<80||spO2<95||pf<300;
+  const hasVent = pco2>45||pH<7.35;
+  let interpretText = hasOxy&&hasVent ? 'Combined oxygenation + ventilation failure — highest priority'
+    : hasOxy ? 'Oxygenation failure — impaired gas exchange (shunt or V/Q mismatch)'
+    : hasVent ? 'Ventilation failure — CO₂ retention, inadequate alveolar ventilation'
+    : 'Homeostasis intact — values within acceptable range';
+
+  const actions=[];
+  if(pf<300||pO2<80){ actions.push('↑ FiO₂ toward SpO₂ target'); actions.push('Apply/optimize PEEP — recruit alveoli'); }
+  if(pco2>50||pH<7.30){ actions.push('↑ RR or VT (within 6–8 mL/kg PBW)'); actions.push('Consider NIV/BiPAP or intubation'); }
+  if(pH<7.25||pf<150){ actions.push('🚨 Notify physician STAT — emergency escalation'); }
+  if(rr>28) actions.push('Assess for respiratory muscle fatigue');
+  if(!actions.length) actions.push('Continue current plan — reassess per protocol');
+  const reassessText = `Repeat ABG in ${pf<200||pH<7.30?'15–30':'30–60'} simulated minutes post-intervention. Monitor SpO₂, RR, WOB continuously.`;
+
+  document.getElementById('aidrContainer').innerHTML = [
+    {icon:'📋',title:'Assess',text:assessText},{icon:'🧠',title:'Interpret',text:interpretText},
+    {icon:'⚡',title:'Decide',text:actions.join(' · ')},{icon:'🔄',title:'Reassess',text:reassessText},
+  ].map(r=>`<div class="aidr-row"><span class="aidr-icon">${r.icon}</span><div class="aidr-body"><strong>${r.title}</strong><span>${r.text}</span></div></div>`).join('');
+
+  document.getElementById('actionPlaybook').innerHTML = actions.map(a=>`<div class="action-item ${a.includes('🚨')?'urgent':''}">${a}</div>`).join('')
+    + (state.scenario ? `<div class="action-item" style="color:#93c5fd;">Case teaching point: ${state.scenario.teach}</div>` : '');
+
+  const critNow = pf<150||spO2<88||pH<7.25||pco2>65;
+  if(critNow && Date.now()-lastAlertTime>8000){
+    lastAlertTime = Date.now();
+    const msgs=[];
+    if(pf<150) msgs.push(`P/F=${fmtNum(pf,0)}`);
+    if(spO2<88) msgs.push(`SpO₂=${fmtNum(spO2,0)}%`);
+    if(pH<7.25) msgs.push(`pH=${fmtNum(pH,2)}`);
+    if(pco2>65) msgs.push(`PaCO₂=${fmtNum(pco2,0)}`);
+    showAlert(`CRITICAL: ${msgs.join(' · ')} — Escalate immediately`);
+  }
+  const overall = document.getElementById('overallStatus');
+  if(pf<150||spO2<88||pH<7.25){ overall.className='status-pill pill-critical'; overall.textContent='⚠ Critical'; }
+  else if(hasOxy||hasVent||pH<7.35){ overall.className='status-pill pill-warning'; overall.textContent='⚡ Warning'; }
+  else { overall.className='status-pill pill-stable'; overall.textContent='✓ Stable'; }
+}
+
+function showAlert(msg){ const b=document.getElementById('alertBanner'); document.getElementById('alertText').textContent=msg; b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),7000); }
+function dismissAlert(){ document.getElementById('alertBanner').classList.remove('show'); }
+let lastAlertTime = 0;
+
+
+/* =====================================================================
+   RT VITALS CHARTING — 10 key indicator trend panes (no financial styling)
+   ===================================================================== */
+const VCHART_DEFS = [
+  { key:'pH',    label:'pH',        unit:'',       field:'ph',    color:'#f59e0b', min:7.35, max:7.45, low:7.20, high:7.60, decimals:2 },
+  { key:'PaCO2', label:'PaCO₂',     unit:'mmHg',   field:'paco2', color:'#2dd4bf', min:35,   max:45,   low:20,   high:80,   decimals:0 },
+  { key:'PaO2',  label:'PaO₂',      unit:'mmHg',   field:'pao2',  color:'#f43f5e', min:80,   low:55,   highOk:true, decimals:0 },
+  { key:'HCO3',  label:'HCO₃⁻',     unit:'mEq/L',  field:'hco3',  color:'#c084fc', min:22,   max:26,   low:12,   high:36,   decimals:1 },
+  { key:'SpO2',  label:'SpO₂',      unit:'%',      field:'spo2',  color:'#34d399', min:95,   low:88,   highOk:true, decimals:0 },
+  { key:'RR',    label:'RR',        unit:'/min',   field:'rr',    color:'#fb923c', min:12,   max:20,   low:6,    high:35,   decimals:0 },
+  { key:'VT',    label:'VT',        unit:'mL',     field:'vt',    color:'#4ade80', min:350,  max:600,  low:200,  high:800,  decimals:0 },
+  { key:'VE',    label:'VE',        unit:'L/min',  field:'mv',    color:'#38bdf8', min:5,    max:10,   low:2,    high:20,   decimals:1 },
+  { key:'PF',    label:'P/F Ratio', unit:'',       field:'pf',    color:'#818cf8', min:300,  low:150,  highOk:true, decimals:0 },
+  { key:'CaO2',  label:'CaO₂',      unit:'mL/dL',  field:'cao2',  color:'#f472b6', min:15,   low:8,    highOk:true, decimals:1 },
+];
+
+let vCharts = {};
+let history = [];
+let tickTimer = null;
+
+function statusFor(def, val){
+  if(val==null||isNaN(val)) return 'ok';
+  if(def.highOk){
+    if(val<def.low) return 'crit';
+    if(val<def.min) return 'warn';
+    return 'ok';
+  }
+  if(val<def.low||val>def.high) return 'crit';
+  if(val<def.min||val>def.max) return 'warn';
+  return 'ok';
+}
+function statusColor(s){ return s==='crit' ? '#ef4444' : s==='warn' ? '#fbbf24' : '#4ade80'; }
+
+function computeFrame(timeSec){
+  const g = runModel();
+  return { time: timeSec, ...g };
+}
+
+function buildChartGrid(){
+  const grid = document.getElementById('vitalsChartGrid');
+  grid.innerHTML = VCHART_DEFS.map(d=>`
+    <div class="vpane">
+      <div class="vpane-hd">
+        <span class="vpane-label">${d.label}</span>
+        <span class="vpane-unit">${d.unit}</span>
+        <span class="vpane-badge" id="badge-${d.key}" style="background:rgba(74,222,128,.15);color:#4ade80;">OK</span>
+        <span class="vpane-val" id="val-${d.key}" style="color:${d.color};">--</span>
+      </div>
+      <div class="vpane-chart" id="chart-${d.key}"></div>
+    </div>`).join('');
+
+  const base = {
+    layout: { background:{type:'solid',color:'#131722'}, textColor:'#8b93a7', fontSize:9 },
+    grid: { vertLines:{color:'#1c212e'}, horzLines:{color:'#1c212e'} },
+    rightPriceScale: { borderColor:'#2a2e39', visible:true, autoScale:true },
+    leftPriceScale: { visible:false },
+    timeScale: { borderColor:'#2a2e39', visible:false, timeVisible:true },
+    crosshair: { mode:LightweightCharts.CrosshairMode.Normal },
+  };
+
+  vCharts = {};
+  VCHART_DEFS.forEach(d=>{
+    const el = document.getElementById('chart-'+d.key);
+    const chart = LightweightCharts.createChart(el, {...base});
+    const series = chart.addLineSeries({ color:d.color, lineWidth:2, priceLineVisible:false });
+    if(d.highOk){
+      series.createPriceLine({ price:d.min, color:'#3a4256', lineWidth:1, lineStyle:LightweightCharts.LineStyle.Dashed, axisLabelVisible:true, title:'min' });
+    } else {
+      series.createPriceLine({ price:d.min, color:'#3a4256', lineWidth:1, lineStyle:LightweightCharts.LineStyle.Dashed, axisLabelVisible:true, title:'min' });
+      series.createPriceLine({ price:d.max, color:'#3a4256', lineWidth:1, lineStyle:LightweightCharts.LineStyle.Dashed, axisLabelVisible:true, title:'max' });
+    }
+    vCharts[d.key] = { chart, series, def:d };
+  });
+
+  // sync time scales across all panes
+  const chartList = Object.values(vCharts).map(v=>v.chart);
+  chartList.forEach(c=>{
+    c.timeScale().subscribeVisibleLogicalRangeChange(r=>{
+      chartList.forEach(other=>{ if(other!==c) other.timeScale().setVisibleLogicalRange(r); });
+    });
+  });
+
+  window.addEventListener('resize', ()=>{
+    Object.values(vCharts).forEach(v=>{
+      const el = document.getElementById('chart-'+v.def.key);
+      v.chart.resize(el.clientWidth, el.clientHeight);
+    });
+  });
+}
+
+function updatePaneDisplay(d, val){
+  const s = statusFor(d, val);
+  const badge = document.getElementById('badge-'+d.key);
+  const valEl = document.getElementById('val-'+d.key);
+  if(badge){ badge.textContent = s==='crit'?'CRIT':s==='warn'?'WARN':'OK'; badge.style.color = statusColor(s); badge.style.background = s==='crit' ? 'rgba(239,68,68,.2)' : s==='warn' ? 'rgba(251,191,36,.15)' : 'rgba(74,222,128,.15)'; }
+  if(valEl){ valEl.textContent = val==null||isNaN(val) ? '--' : val.toFixed(d.decimals); valEl.style.color = statusColor(s); }
+  if(vCharts[d.key]) vCharts[d.key].series.applyOptions({ color: statusColor(s) });
+}
+
+function seedHistory(count=90){
+  if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
+  history = [];
+  const strideBase = 60;
+  let t = -count*strideBase;
+  for(let i=0;i<count;i++){
+    t += strideBase;
+    history.push(computeFrame(t));
+  }
+  state.simSeconds = 0;
+
+  VCHART_DEFS.forEach(d=>{
+    vCharts[d.key].series.setData(history.map(h=>({ time:h.time, value:h[d.field] })));
+  });
+  setTimeout(()=>{ Object.values(vCharts).forEach(v=>v.chart.timeScale().fitContent()); }, 50);
+
+  const tail = history[history.length-1];
+  VCHART_DEFS.forEach(d=> updatePaneDisplay(d, tail[d.field]));
+  document.getElementById('chartCaseLabel').textContent = state.scenario ? state.scenario.name : '—';
+  renderRightSidebar(tail);
+  startTicking();
+}
+
+function startTicking(){
+  if(tickTimer) clearInterval(tickTimer);
+  if(!state.playing) return;
+  tickTimer = setInterval(()=>{
+    const strideSec = 60 * state.speed;
+    state.simSeconds += strideSec;
+    const lastT = history[history.length-1].time;
+    const newT = lastT + strideSec;
+    const frame = computeFrame(newT);
+    history.push(frame);
+    if(history.length>300) history.shift();
+    const tail = history[history.length-1];
+
+    VCHART_DEFS.forEach(d=>{
+      vCharts[d.key].series.update({ time:tail.time, value:tail[d.field] });
+      updatePaneDisplay(d, tail[d.field]);
+    });
+
+    document.getElementById("simClock").textContent = fmtClock(state.simSeconds);
+    renderRightSidebar(tail);
+  }, 1000);
+}
+
+
+/* =====================================================================
+   TOPBAR WIRING
+   ===================================================================== */
+function renderAll(){
+  if(!state.scenario) return;
+  const g = runModel();
+  renderRightSidebar(g);
+}
+
+function initTopbar(){
+  const sel = document.getElementById("caseSelect");
+  sel.innerHTML = `<option value="">— Choose a case —</option>` +
+    Object.entries(SCENARIOS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("");
+
+  document.querySelectorAll(".tf-btn[data-speed]").forEach(btn=>{
+    btn.onclick = () => {
+      document.querySelectorAll(".tf-btn[data-speed]").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      state.speed = +btn.dataset.speed;
+    };
+  });
+
+  document.getElementById("btnPlayPause").onclick = (e) => {
+    state.playing = !state.playing;
+    e.target.textContent = state.playing ? "⏸ Pause" : "▶ Play";
+    e.target.classList.toggle("active", state.playing);
+    if(state.playing) startTicking(); else if(tickTimer) clearInterval(tickTimer);
+  };
+}
+
+/* =====================================================================
+   NBRC QUIZ MODE
+   ===================================================================== */
+function quizPool(){ return state.quiz.category==="all" ? QUIZ_BANK : QUIZ_BANK.filter(q=>q.cat===state.quiz.category); }
+function pickQuizQuestion(){ const pool=quizPool(); state.quiz.currentQ = pool[Math.floor(Math.random()*pool.length)]; state.quiz.answered=false; renderQuizTab(); }
+function answerQuiz(i){
+  if(state.quiz.answered) return;
+  state.quiz.answered = true; state.quiz.total++;
+  const correct = state.quiz.currentQ.a;
+  if(i===correct) state.quiz.correct++;
+  document.querySelectorAll(".opt").forEach((b,idx)=>{ if(idx===correct) b.classList.add("correct"); else if(idx===i) b.classList.add("wrong"); b.disabled=true; });
+  document.getElementById("qexplain").style.display = "block";
+  document.getElementById("scoreLine").innerHTML = `Score: <b>${state.quiz.correct} / ${state.quiz.total}</b>`;
+}
+function renderQuizTab(){
+  const el = document.getElementById("tab-quiz");
+  if(!state.quiz.currentQ) state.quiz.currentQ = quizPool()[0];
+  const cats = ["all", ...new Set(QUIZ_BANK.map(q=>q.cat))];
+  const q = state.quiz.currentQ;
+  el.innerHTML = `
+    <div class="qcat">${cats.map(c=>`<span data-cat="${c}" class="${state.quiz.category===c?'active':''}">${c==="all"?"All Categories":c}</span>`).join("")}</div>
+    <div class="scorebar"><span id="scoreLine">Score: <b>${state.quiz.correct} / ${state.quiz.total}</b></span><span>${q.cat}</span></div>
+    <div class="qbox">
+      <div class="qmeta">NBRC Practice Question</div>
+      <div class="qtext">${q.q}</div>
+      ${q.options.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}
+      <div class="explain" id="qexplain" style="display:none;">${q.exp}</div>
+    </div>
+    <div class="btn-row"><button class="btn-primary" id="btnNextQ">Next Question →</button></div>`;
+  el.querySelectorAll(".qcat span").forEach(s=> s.onclick = () => { state.quiz.category = s.dataset.cat; pickQuizQuestion(); });
+  el.querySelectorAll(".opt").forEach(b=> b.onclick = () => answerQuiz(+b.dataset.i));
+  document.getElementById("btnNextQ").onclick = pickQuizQuestion;
+}
+
+/* =====================================================================
+   ABG INTERPRETATION DRILL (interactive, graded)
+   ===================================================================== */
+function classifyABG(ph, paco2, hco3){
+  const phStatus = ph < 7.35 ? "acidemia" : (ph > 7.45 ? "alkalemia" : "normal");
+  const co2dev = (paco2 - 40) / 5;
+  const hco3dev = (hco3 - 24) / 2;
+  if(Math.abs(co2dev) < 0.3 && Math.abs(hco3dev) < 0.3 && phStatus === "normal") return { phStatus, primary: "none", direction: "none", compensation: "none" };
+  const primary = Math.abs(co2dev) >= Math.abs(hco3dev) ? "respiratory" : "metabolic";
+  const direction = primary === "respiratory" ? (paco2 > 40 ? "acidosis" : "alkalosis") : (hco3 < 24 ? "acidosis" : "alkalosis");
+  let compensation;
+  const consistent = (phStatus === "acidemia" && direction === "acidosis") || (phStatus === "alkalemia" && direction === "alkalosis");
+  const secondaryDev = primary === "respiratory" ? Math.abs(hco3dev) : Math.abs(co2dev);
+  if(phStatus === "normal") compensation = "full";
+  else if(consistent) compensation = secondaryDev > 0.5 ? "partial" : "none";
+  else compensation = "none";
+  return { phStatus, primary, direction, compensation };
+}
+function labelABG(c){
+  if(c.primary === "none") return "Normal acid-base status";
+  const comp = c.compensation === "full" ? "Fully compensated" : c.compensation === "partial" ? "Partially compensated" : "Uncompensated";
+  return `${comp} ${c.primary} ${c.direction}`;
+}
+function newABGCase(){
+  const paco2 = Math.round(20 + Math.random()*50);
+  const hco3 = Math.round(10 + Math.random()*32);
+  const ph = clamp(6.1 + Math.log10(hco3/(0.03*paco2)), 6.9, 7.7);
+  state.abgTrain.current = { ph: Math.round(ph*1000)/1000, paco2, hco3, fromSim:false };
+  renderABGTrainTab();
+}
+function sendLiveToABGTrainer(){
+  if(!state.scenario) return;
+  const g = runModel();
+  state.abgTrain.current = { ph: g.ph, paco2: g.paco2, hco3: g.hco3, fromSim:true };
+  renderABGTrainTab();
+}
+function checkABGAnswer(){
+  const c = state.abgTrain.current;
+  const truth = classifyABG(c.ph, c.paco2, c.hco3);
+  const uStatus = document.getElementById("selABGStatus").value;
+  const uPrimary = document.getElementById("selABGPrimary").value;
+  const uComp = document.getElementById("selABGComp").value;
+  const isCorrect = uStatus===truth.phStatus && uPrimary===truth.primary && uComp===truth.compensation;
+  state.abgTrain.total++;
+  if(isCorrect) state.abgTrain.correct++;
+  const fb = document.getElementById("abgFeedback");
+  fb.innerHTML = `<div style="color:${isCorrect?'#4ade80':'#f87171'};font-weight:700;margin-top:10px;font-family:var(--mono);font-size:12px;">
+    ${isCorrect ? "✓ Correct." : "✗ Not quite."} Correct interpretation: <b>${labelABG(truth)}</b></div>`;
+  document.getElementById("abgScoreLine").innerHTML = `Score: <b>${state.abgTrain.correct} / ${state.abgTrain.total}</b>`;
+}
+function renderABGTrainTab(){
+  const el = document.getElementById("tab-abgtrain");
+  if(!state.abgTrain.current) newABGCase();
+  const c = state.abgTrain.current;
+  el.innerHTML = `
+    <div class="scorebar"><span id="abgScoreLine">Score: <b>${state.abgTrain.correct} / ${state.abgTrain.total}</b></span><span>${c.fromSim ? "From live simulator" : "Random practice case"}</span></div>
+    <div class="abg-grid-t">
+      <div class="abg-cell-t"><div class="k">pH</div><div class="v">${c.ph.toFixed(2)}</div></div>
+      <div class="abg-cell-t"><div class="k">PaCO₂</div><div class="v">${c.paco2}</div></div>
+      <div class="abg-cell-t"><div class="k">HCO₃⁻</div><div class="v">${c.hco3}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;max-width:780px;">
+      <div style="flex:1;min-width:160px;"><label class="f-lbl">pH Status</label>
+        <select id="selABGStatus" class="f-inp"><option value="acidemia">Acidemia</option><option value="alkalemia">Alkalemia</option><option value="normal">Normal</option></select></div>
+      <div style="flex:1;min-width:160px;"><label class="f-lbl">Primary Disorder</label>
+        <select id="selABGPrimary" class="f-inp"><option value="respiratory">Respiratory</option><option value="metabolic">Metabolic</option><option value="none">None (normal)</option></select></div>
+      <div style="flex:1;min-width:160px;"><label class="f-lbl">Compensation</label>
+        <select id="selABGComp" class="f-inp"><option value="none">Uncompensated</option><option value="partial">Partially Compensated</option><option value="full">Fully Compensated</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnCheckABG">Check My Interpretation</button>
+      <button class="btn-primary" id="btnNewABG" style="background:#0d1520;border:1px solid var(--border);color:var(--text2);">New Random Case</button>
+      <button class="btn-primary" id="btnSendLive" style="background:#0d1520;border:1px solid var(--border);color:var(--text2);">Pull From Live Monitor</button>
+    </div>
+    <div id="abgFeedback"></div>`;
+  document.getElementById("btnCheckABG").onclick = checkABGAnswer;
+  document.getElementById("btnNewABG").onclick = newABGCase;
+  document.getElementById("btnSendLive").onclick = sendLiveToABGTrainer;
+}
+
+function renderLog(){
+  document.getElementById("logList").innerHTML = state.log.map(l=>`<div class="logline"><b>${l.t}</b> — ${l.msg}</div>`).join("") || `<div class="logline">No actions logged yet.</div>`;
+}
+
+/* =====================================================================
+   TABS
+   ===================================================================== */
+document.querySelectorAll(".tabbtn").forEach(b=> b.onclick = () => {
+  document.querySelectorAll(".tabbtn").forEach(x=>x.classList.toggle("active", x===b));
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+b.dataset.tab));
+});
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+buildChartGrid();
+initTopbar();
+renderLeftSidebar();
+renderRightSidebar(null);
+renderQuizTab();
+renderABGTrainTab();
+renderLog();
+document.getElementById("caseSelect").value = "";
+loadScenario("copd");
+
+</script>
+</body>
+</html>
