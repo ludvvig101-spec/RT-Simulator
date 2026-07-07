@@ -190,6 +190,9 @@ input[type=range].f-range { width: 100%; accent-color: var(--primary); height: 1
 .opt.correct { border-color: #22c55e; background: rgba(34,197,94,.12); color: #4ade80; }
 .opt.wrong { border-color: #ef4444; background: rgba(239,68,68,.12); color: #f87171; }
 .explain { margin-top: 10px; font-size: 11.5px; color: var(--text2); border-top: 1px dashed var(--border2); padding-top: 10px; line-height: 1.6; }
+.qimg-wrap { margin: 10px 0; max-width: 420px; }
+.qimg { max-width: 100%; display: block; border-radius: 6px; border: 1px solid var(--border2); background: #000; }
+.qimg-cap { font-size: 9px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
 .scorebar { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); max-width: 780px; }
 .scorebar b { color: #93c5fd; }
 .btn-row { display: flex; gap: 8px; margin-top: 10px; max-width: 780px; }
@@ -632,6 +635,76 @@ const SCENARIOS = {
     mech: { compliance: 55, resistance: 12, shunt: 0.05, deadspace: 0.25, vco2: 0.95, peepResponsive: 0.2 },
     hco3Base: 36, hr: 98, bpS: 102, bpD: 64, temp: 36.8,
     vent: { mode: "vcac", rr: 12, vt: 440, peep: 0, fio2: 21, ps: 0, ie: 3 }
+  },
+  bronchiectasis: {
+    name: "Bronchiectasis Exacerbation",
+    history: "58F, childhood history of severe pneumonias, decades of daily productive cough with copious purulent sputum, now with a worsening infective flare.",
+    teach: "Bronchiectasis is irreversible bronchial dilation from repeated infection/inflammation — the priority is aggressive airway clearance (mucolytics, high-frequency chest wall oscillation) plus antibiotics for the acute flare, not just bronchodilators.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 45, resistance: 24, shunt: 0.20, deadspace: 0.30, vco2: 1.05, peepResponsive: 0.35 },
+    hco3Base: 26, hr: 100, bpS: 122, bpD: 78, temp: 37.6,
+    vent: { mode: "vcac", rr: 16, vt: 420, peep: 5, fio2: 32, ps: 0, ie: 3 }
+  },
+  tuberculosis: {
+    name: "Reactivation Pulmonary Tuberculosis",
+    history: "49M, recent immigrant, 6 weeks of night sweats, unintentional weight loss, low-grade fevers, and a chronic cough now productive of blood-streaked sputum.",
+    teach: "Suspected active TB requires airborne precautions (negative-pressure room, N95) before anything else. Real treatment is a multidrug antimycobacterial regimen (e.g., RIPE) over months — the 'antibiotics' option here is a placeholder for that regimen, not a same-day fix.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 42, resistance: 16, shunt: 0.22, deadspace: 0.28, vco2: 1.1, peepResponsive: 0.4 },
+    hco3Base: 24, hr: 102, bpS: 108, bpD: 68, temp: 38.0,
+    vent: { mode: "vcac", rr: 20, vt: 400, peep: 5, fio2: 32, ps: 0, ie: 3 }
+  },
+  pleural_effusion: {
+    name: "Large Pleural Effusion",
+    history: "66M with heart failure, progressive dyspnea over a week, decreased breath sounds and dull percussion over the right lower chest.",
+    teach: "The definitive fix here is procedural (thoracentesis or chest tube), not pharmacologic — draining the effusion typically improves oxygenation and comfort far more than any medication. Fluid protein/LDH (Light's criteria) distinguishes transudate from exudate and guides the workup.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 35, resistance: 16, shunt: 0.30, deadspace: 0.22, vco2: 1.0, peepResponsive: 0.5 },
+    hco3Base: 24, hr: 98, bpS: 128, bpD: 80, temp: 37.1,
+    vent: { mode: "vcac", rr: 18, vt: 410, peep: 5, fio2: 30, ps: 0, ie: 3 }
+  },
+  lung_cancer: {
+    name: "Post-Obstructive Pneumonia (Endobronchial Mass)",
+    history: "70M, 50 pack-year smoker, months of unintentional weight loss and a new unilateral wheeze, now febrile with a post-obstructive pneumonia distal to an endobronchial mass.",
+    teach: "A new unilateral effusion, unexplained weight loss, or a fixed monophonic wheeze in a longtime smoker should raise concern for underlying malignancy, not just infection — the pneumonia may resolve, but the mass and its obstruction won't unless addressed directly.",
+    intubated: false,
+    device: "nc", flow: 3,
+    mech: { compliance: 38, resistance: 20, shunt: 0.28, deadspace: 0.30, vco2: 1.15, peepResponsive: 0.35 },
+    hco3Base: 24, hr: 106, bpS: 118, bpD: 74, temp: 38.4,
+    vent: { mode: "vcac", rr: 20, vt: 400, peep: 5, fio2: 35, ps: 0, ie: 3 }
+  },
+  osa_crisis: {
+    name: "Undiagnosed Severe OSA — Post-Op Opioid Hypoventilation",
+    history: "48M, BMI 42, undiagnosed obstructive sleep apnea, 4 hours after abdominal surgery found deeply sedated and hypoventilating in the PACU after routine IV opioid pain dosing.",
+    teach: "Undiagnosed OSA plus opioids is a dangerous combination — the obstructive component makes them exquisitely sensitive to sedation. CPAP/PEEP is unusually effective here (classic OSA physiology), and opioid reversal directly treats the drive component.",
+    intubated: false,
+    device: "nrb", flow: 10,
+    mech: { compliance: 48, resistance: 16, shunt: 0.15, deadspace: 0.25, vco2: 0.95, peepResponsive: 0.6 },
+    hco3Base: 27, hr: 92, bpS: 138, bpD: 88, temp: 36.9,
+    vent: { mode: "vcac", rr: 8, vt: 380, peep: 0, fio2: 40, ps: 0, ie: 3 }
+  },
+  pulm_htn: {
+    name: "Chronic Pulmonary Hypertension — Acute Right Heart Strain",
+    history: "39F with known chronic pulmonary arterial hypertension, progressive exertional dyspnea and syncope, now with worsening edema, elevated JVP, and low-output symptoms suggesting acute right heart decompensation.",
+    teach: "Chronically elevated pulmonary vascular resistance overloads the right ventricle over time (cor pulmonale). Unlike ARDS, this hypoxemia isn't primarily from alveolar filling — pulmonary vasodilator therapy (e.g., inhaled nitric oxide) targets the vascular resistance directly rather than recruiting alveoli.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 46, resistance: 15, shunt: 0.18, deadspace: 0.35, vco2: 1.0, peepResponsive: 0.25 },
+    hco3Base: 24, hr: 104, bpS: 100, bpD: 66, temp: 36.8,
+    vent: { mode: "vcac", rr: 22, vt: 380, peep: 0, fio2: 32, ps: 0, ie: 3 }
+  },
+  kyphoscoliosis: {
+    name: "Kyphoscoliosis with Chronic Respiratory Failure",
+    history: "58F, severe thoracic scoliosis since adolescence, progressive exertional dyspnea over years, now with morning headaches and daytime somnolence suggesting chronic hypoventilation.",
+    teach: "The restriction here is the chest wall, not the lungs themselves — compliance is low because the bony cage can't expand normally. These patients often run a chronically compensated respiratory acidosis, similar in pattern to COPD, and may benefit from nocturnal noninvasive ventilation.",
+    intubated: false,
+    device: "nc", flow: 2,
+    mech: { compliance: 28, resistance: 14, shunt: 0.18, deadspace: 0.30, vco2: 0.95, peepResponsive: 0.3 },
+    hco3Base: 30, hr: 92, bpS: 128, bpD: 80, temp: 36.9,
+    vent: { mode: "vcac", rr: 16, vt: 360, peep: 5, fio2: 30, ps: 0, ie: 3 }
   }
 };
 
@@ -652,12 +725,12 @@ const O2_DEVICES = {
 const MEDICATIONS = [
   { id:"albuterol", name:"Albuterol (Salbutamol)", cls:"SABA Bronchodilator",
     teach:"Beta-2 agonist relaxes bronchial smooth muscle, lowering airway resistance. First-line for bronchospasm. Watch for tachycardia and tremor.",
-    indicated:["asthma","copd","bronchiolitis","cf","anaphylaxis"],
+    indicated:["asthma","copd","bronchiolitis","cf","anaphylaxis","bronchiectasis"],
     apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.72); state.scenario.hr=Math.min(180,state.scenario.hr+8); } },
 
   { id:"ipratropium", name:"Ipratropium Bromide", cls:"Anticholinergic Bronchodilator",
     teach:"Blocks muscarinic receptors to reduce vagally-mediated bronchoconstriction. Synergistic with beta-2 agonists, especially in COPD.",
-    indicated:["copd","asthma","cf"],
+    indicated:["copd","asthma","cf","bronchiectasis"],
     apply(state){ const m=state.scenario.mech; m.resistance=Math.max(10,m.resistance*0.87); } },
 
   { id:"racepi", name:"Racemic Epinephrine (Nebulized)", cls:"Upper-Airway Vasoconstrictor",
@@ -677,12 +750,12 @@ const MEDICATIONS = [
 
   { id:"naloxone", name:"Naloxone", cls:"Opioid Antagonist",
     teach:"Competitively displaces opioids from receptors, restoring central respiratory drive. Onset within minutes IV — reassess for re-sedation as it wears off before the opioid does. May precipitate acute withdrawal.",
-    indicated:["opioid"],
+    indicated:["opioid","osa_crisis"],
     apply(state){ state.scenario.vent.rr=16; state.scenario.vent.vt=460; state.scenario.hr=Math.max(60,state.scenario.hr-6); } },
 
   { id:"lasix", name:"Furosemide (Lasix)", cls:"Loop Diuretic",
     teach:"Promotes diuresis to reduce preload and clear alveolar fluid in cardiogenic pulmonary edema — improves both compliance and shunt as flooding resolves.",
-    indicated:["edema"],
+    indicated:["edema","pulm_htn"],
     apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.08,m.shunt-0.14); m.compliance=Math.min(65,m.compliance+9); state.scenario.bpS=Math.max(85,state.scenario.bpS-10); } },
 
   { id:"bicarb", name:"Sodium Bicarbonate", cls:"Alkalinizing Agent",
@@ -707,12 +780,12 @@ const MEDICATIONS = [
 
   { id:"ino", name:"Inhaled Nitric Oxide", cls:"Selective Pulmonary Vasodilator",
     teach:"Dilates vessels only in ventilated lung units, redirecting blood flow toward better-oxygenated alveoli and improving V/Q matching — a rescue therapy for refractory hypoxemia.",
-    indicated:["ards","drowning"],
+    indicated:["ards","drowning","pulm_htn"],
     apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.10,m.shunt-0.10); } },
 
   { id:"mucolytic", name:"Mucolytics + Airway Clearance (Dornase alfa/CPT)", cls:"Secretion Clearance",
     teach:"Thins tenacious secretions and, paired with chest physiotherapy or oscillatory PEP devices, helps clear the mucus plugging that drives airway resistance in bronchiectasis/CF.",
-    indicated:["cf","bronchiolitis","copd"],
+    indicated:["cf","bronchiolitis","copd","bronchiectasis"],
     apply(state){ const m=state.scenario.mech; m.resistance=Math.max(12,m.resistance*0.85); } },
 
   { id:"heparin", name:"Anticoagulation (Heparin)", cls:"Anticoagulant",
@@ -722,11 +795,386 @@ const MEDICATIONS = [
 
   { id:"antibiotics", name:"Empiric Antibiotics", cls:"Antimicrobial",
     teach:"Treats the underlying infection driving consolidation/sepsis, but real clinical improvement in gas exchange typically takes 24–72 hours — this simulation shows only a token immediate change so you don't mistake antibiotics for a rescue therapy.",
-    indicated:["pneumonia","ards","cf"],
+    indicated:["pneumonia","ards","cf","bronchiectasis","tuberculosis","lung_cancer"],
     apply(state){ const m=state.scenario.mech; m.shunt=Math.max(0.10,m.shunt-0.02); } },
 ];
 
 
+
+/* =====================================================================
+   EXTENDED QUESTION BANK — Original NBRC-style questions written to cover
+   the same topic areas as a 45-chapter respiratory assessment course.
+   All items below are original work, not reproduced from any textbook
+   or test bank.
+   ===================================================================== */
+const EXTENDED_QUIZ_BANK = [
+  // Ch.1 Patient Interview
+  {cat:"Patient Assessment", q:"During an interview, a patient says, \"I guess I've been more tired than usual and a little short of breath.\" The therapist responds, \"Tell me more about that.\" This is an example of which interview technique?",
+   options:["Confrontation","Facilitation","Closed questioning","Reflection"],
+   a:1, exp:"Facilitation uses open, encouraging prompts (\"tell me more,\" \"go on\") to keep the patient talking without steering the content — useful for gathering a fuller history."},
+  {cat:"Patient Assessment", q:"Which question is an example of an open-ended question during a patient interview?",
+   options:["Do you have chest pain right now?","Is your cough worse at night?","What does the shortness of breath feel like to you?","Have you ever smoked cigarettes?"],
+   a:2, exp:"Open-ended questions invite the patient to describe their experience in their own words rather than answering yes/no, which usually yields richer clinical detail."},
+
+  // Ch.2 Physical Examination
+  {cat:"Patient Assessment", q:"On percussion of the chest, a hyperresonant note is most consistent with which condition?",
+   options:["Pneumothorax","Lobar pneumonia with consolidation","Pleural effusion","Atelectasis"],
+   a:0, exp:"Trapped air (as in pneumothorax or severe hyperinflation) produces a hyperresonant, lower-pitched percussion note because there's more air and less tissue density to dampen the sound."},
+  {cat:"Patient Assessment", q:"Tactile fremitus is typically decreased or absent over which of the following?",
+   options:["Lobar pneumonia","A large pleural effusion","Early consolidation","A thin chest wall"],
+   a:1, exp:"Fluid in the pleural space dampens the transmission of vibration from the lungs to the chest wall, reducing fremitus — the opposite of consolidation, which transmits vibration better and increases fremitus."},
+
+  // Ch.3 Pathophysiologic basis for common manifestations
+  {cat:"Patient Assessment", q:"Clubbing of the fingers is most closely associated with which underlying mechanism?",
+   options:["Acute bronchospasm","Chronic hypoxemia and certain chronic cardiopulmonary diseases","Acute hyperventilation","Isolated upper airway obstruction"],
+   a:1, exp:"Clubbing develops gradually and is linked to chronic hypoxemia and some chronic pulmonary and cardiac diseases (e.g., interstitial lung disease, cystic fibrosis, cyanotic heart disease), not acute processes."},
+  {cat:"Patient Assessment", q:"A patient with long-standing severe COPD develops cor pulmonale. What is the underlying mechanism?",
+   options:["Left ventricular failure from systemic hypertension","Right ventricular strain/failure from chronic pulmonary hypertension","Aortic valve disease","Left atrial enlargement from mitral stenosis"],
+   a:1, exp:"Chronic hypoxemia and lung destruction raise pulmonary vascular resistance over time, forcing the right ventricle to work harder against increased pulmonary artery pressure — eventually causing right heart strain and failure (cor pulmonale)."},
+
+  // Ch.4 Pulmonary Function Testing
+  {cat:"Equipment / Calculations", q:"An FEV1/FVC ratio that is reduced, with a low FVC and a low FEV1, but a normal or increased FEV1/FVC ratio, is most consistent with which pattern?",
+   options:["Obstructive pattern","Restrictive pattern","Normal spirometry","Isolated diffusion defect"],
+   a:1, exp:"In restrictive disease, both FVC and FEV1 fall roughly proportionally, so the FEV1/FVC ratio stays normal or even rises, unlike obstructive disease where the ratio itself falls."},
+  {cat:"Equipment / Calculations", q:"A reduced DLCO (diffusing capacity) with normal spirometry is most suggestive of which condition?",
+   options:["Asthma","Early interstitial lung disease or pulmonary vascular disease","Chronic bronchitis","Vocal cord dysfunction"],
+   a:1, exp:"DLCO reflects the alveolar-capillary membrane's ability to transfer gas; it drops early in interstitial and pulmonary vascular diseases even before airflow measures change, while purely obstructive airway diseases don't primarily impair diffusion."},
+
+  // Ch.5 Blood Gas Assessment
+  {cat:"ABG / Acid-Base", q:"An arterial blood sample is left at room temperature for over an hour before analysis. What effect would this most likely have on the results?",
+   options:["Falsely elevated PaO2 and falsely low PaCO2","Falsely low PaO2 and falsely high PaCO2 from ongoing cellular metabolism","No effect on blood gas values","Falsely elevated pH only"],
+   a:1, exp:"Red and white blood cells continue consuming oxygen and producing CO2 after the draw; without prompt icing and analysis, PaO2 drifts down and PaCO2 drifts up, giving an inaccurate picture."},
+  {cat:"ABG / Acid-Base", q:"Prior to a radial arterial puncture, a modified Allen's test is performed primarily to:",
+   options:["Confirm adequate collateral (ulnar) circulation to the hand","Measure the patient's blood pressure","Assess for radial artery calcification","Determine the patient's clotting time"],
+   a:0, exp:"The Allen's test checks that the ulnar artery can adequately perfuse the hand if the radial artery is injured or thromboses after puncture, reducing the risk of ischemic hand injury."},
+
+  // Ch.6 Assessment of Oxygenation
+  {cat:"ABG / Acid-Base", q:"A patient's SpO2 reads 92% on pulse oximetry, but a co-oximetry panel shows significant methemoglobinemia. Why is pulse oximetry unreliable here?",
+   options:["Pulse oximetry cannot distinguish methemoglobin from oxyhemoglobin, and methemoglobin biases the reading toward the mid-80s%–90s% regardless of true saturation","Pulse oximetry only works on the earlobe in this situation","Methemoglobin falsely raises the SpO2 to near 100%","Pulse oximetry is unaffected by abnormal hemoglobins"],
+   a:0, exp:"Standard two-wavelength pulse oximetry can't tell methemoglobin apart from oxyhemoglobin; as methemoglobin rises, the reading tends to be pulled toward the low-90s% independent of the patient's actual oxygenation, making co-oximetry necessary for an accurate value."},
+  {cat:"ABG / Acid-Base", q:"Which value best reflects the total oxygen-carrying capacity of the blood, accounting for both hemoglobin saturation and hemoglobin concentration?",
+   options:["PaO2","SpO2 alone","CaO2 (arterial oxygen content)","P/F ratio"],
+   a:2, exp:"CaO2 combines hemoglobin concentration, percent saturation, and the small dissolved-oxygen contribution from PaO2, making it the most complete single measure of how much oxygen the blood is actually carrying."},
+
+  // Ch.7 Assessment of the Cardiovascular System
+  {cat:"Patient Assessment", q:"Jugular venous distension that increases with abdominal pressure (a positive hepatojugular reflux) most directly suggests:",
+   options:["Left ventricular failure only","Right-sided heart failure or volume overload","Aortic stenosis","Pneumothorax"],
+   a:1, exp:"Elevated jugular venous pressure that rises further with abdominal compression indicates the right heart can't accommodate the increased venous return, a classic sign of right-sided heart failure or fluid overload."},
+  {cat:"Patient Assessment", q:"An S3 heart sound in an older adult with dyspnea most often indicates:",
+   options:["A normal finding of aging","Volume overload / ventricular failure","Mitral valve stenosis only","Pericarditis"],
+   a:1, exp:"An S3 gallop after childhood usually reflects a volume-overloaded, poorly compliant ventricle, commonly heard in heart failure."},
+
+  // Ch.8 Radiologic Examination of the Chest
+  {cat:"Patient Assessment", q:"On a chest x-ray, blunting of the costophrenic angle is most classically associated with:",
+   options:["Pneumothorax","Pleural effusion","Hyperinflated emphysematous lungs","Pulmonary embolism"],
+   a:1, exp:"Fluid collecting in the pleural space layers into the costophrenic angle first, blunting its normally sharp appearance on an upright film.",
+   scenario:"pleural_effusion",
+   img:{ url:"https://commons.wikimedia.org/wiki/Special:FilePath/Pleural_effusion.jpg", caption:"Chest radiograph showing a pleural effusion with blunting of the costophrenic angle.", credit:"Wikimedia Commons" }},
+  {cat:"Patient Assessment", q:"A visible visceral pleural line with absence of lung markings peripheral to it on a chest x-ray is the classic finding of:",
+   options:["Pneumothorax","Consolidation","Pulmonary edema","Atelectasis"],
+   a:0, exp:"Air in the pleural space separates the visceral pleura from the chest wall, creating a thin white pleural line with no lung markings visible beyond it — the hallmark of pneumothorax.",
+   scenario:"ptx",
+   img:{ url:"https://commons.wikimedia.org/wiki/Special:FilePath/X-ray_subtle_pneumothorax_in_inspiration.jpg", caption:"Chest x-ray demonstrating a pneumothorax with a visible pleural line.", credit:"Wikimedia Commons (CC0)" }},
+
+  // Ch.9 Diagnostic Tests and Procedures
+  {cat:"Patient Assessment", q:"A bronchoscopy with bronchoalveolar lavage (BAL) is most useful for:",
+   options:["Measuring lung volumes","Sampling cells and fluid from the distal airways/alveoli for infection or diagnostic workup","Assessing chest wall compliance","Measuring maximum inspiratory pressure"],
+   a:1, exp:"BAL instills and re-aspirates saline through a bronchoscope to sample the alveolar-level cellular and microbial environment, useful for infections, malignancy, and interstitial disease workups."},
+  {cat:"Patient Assessment", q:"A ventilation/perfusion (V/Q) scan is most commonly ordered to evaluate for:",
+   options:["Pulmonary embolism","Pneumonia","COPD severity","Restrictive lung disease"],
+   a:0, exp:"V/Q scanning looks for areas that are ventilated but not perfused (or vice versa) — a mismatch pattern classically seen with pulmonary embolism."},
+
+  // Ch.10 Therapist-Driven Protocols
+  {cat:"Mechanical Ventilation", q:"The main advantage of a therapist-driven protocol (TDP) program is that it allows the respiratory therapist to:",
+   options:["Prescribe all medications independently of physician orders","Assess the patient and adjust therapy within a physician-approved algorithm without a new order for each change","Bypass documentation requirements","Avoid physician involvement in care decisions entirely"],
+   a:1, exp:"TDPs give RTs the authority to initiate, adjust, or discontinue therapy based on patient assessment within a pre-approved, physician-sanctioned algorithm — improving responsiveness while keeping medical oversight in place."},
+  {cat:"Mechanical Ventilation", q:"Which is a typical example of a therapist-driven protocol?",
+   options:["Oxygen therapy protocol that allows titration of FiO2 to a target SpO2","A protocol that lets the RT independently order a chest CT","A protocol that replaces the need for physician co-signature entirely","A billing-only administrative checklist"],
+   a:0, exp:"A common TDP example is an oxygen titration protocol, where the RT adjusts FiO2/flow within pre-set parameters to keep SpO2 in a target range without waiting for a new order each time."},
+
+  // Ch.11 Respiratory Failure and Ventilatory Management
+  {cat:"Mechanical Ventilation", q:"Type II (hypercapnic) respiratory failure is best defined as:",
+   options:["PaO2 < 60 mmHg with normal PaCO2","PaCO2 > 45–50 mmHg with an accompanying respiratory acidosis, reflecting inadequate alveolar ventilation","SpO2 < 90% on room air","A P/F ratio less than 300"],
+   a:1, exp:"Type II respiratory failure is a ventilatory failure — the patient can't move enough air to clear CO2 — distinguishing it from Type I (hypoxemic) failure, which is primarily a gas-exchange/oxygenation problem."},
+  {cat:"Mechanical Ventilation", q:"A patient in acute ventilatory failure from a COPD exacerbation who is alert, hemodynamically stable, and able to protect their airway is a reasonable candidate for which initial intervention?",
+   options:["Immediate intubation and mechanical ventilation as the only option","A trial of noninvasive ventilation (NIV/BiPAP)","No respiratory support since COPD patients tolerate hypercapnia well","Only supplemental oxygen with no ventilatory support"],
+   a:1, exp:"NIV is well supported as first-line therapy for an awake, cooperative, hemodynamically stable patient in a COPD exacerbation with acute-on-chronic hypercapnic failure, and can often avoid intubation."},
+
+  // Ch.12 Recording Skills and Communication
+  {cat:"Patient Assessment", q:"In a SOAP note, a patient's reported symptom, \"I feel like I can't get a full breath,\" belongs in which section?",
+   options:["Subjective","Objective","Assessment","Plan"],
+   a:0, exp:"Subjective information is what the patient reports in their own words about how they feel; objective findings are measured or observed by the clinician (vitals, exam, labs)."},
+  {cat:"Patient Assessment", q:"In SBAR communication (Situation-Background-Assessment-Recommendation) used for handoffs, the \"Recommendation\" component should include:",
+   options:["The patient's admitting diagnosis only","What the caller thinks needs to happen next, or a specific request","A restatement of vital signs","The patient's insurance information"],
+   a:1, exp:"SBAR's Recommendation section is where the communicator states what they think should be done or specifically asks for an order/evaluation — it's meant to close the loop, not just relay data."},
+
+  // Ch.13 COPD
+  {cat:"Obstructive Lung Disease", q:"Which physical exam finding is classically associated with emphysema, distinguishing it from chronic bronchitis?",
+   options:["Copious purulent sputum production","Increased anteroposterior (barrel) chest diameter with diminished breath sounds","Peripheral edema and cyanosis (\"blue bloater\" appearance)","Loud wheezing throughout both lung fields"],
+   a:1, exp:"Emphysema classically produces a hyperinflated, barrel-shaped chest with quiet breath sounds from lung tissue destruction and air trapping (\"pink puffer\"), whereas chronic bronchitis more classically presents with productive cough and cyanosis (\"blue bloater\")."},
+  {cat:"Obstructive Lung Disease", q:"A patient with severe COPD has a chronically elevated HCO3- on ABG. This best reflects:",
+   options:["Acute metabolic acidosis","Renal compensation for long-standing respiratory acidosis","Acute respiratory alkalosis","A lab error"],
+   a:1, exp:"Over days, the kidneys retain bicarbonate to buffer chronically elevated PaCO2, which is why stable COPD patients often run a compensated respiratory acidosis with an elevated baseline HCO3-.", scenario:"copd"},
+
+  // Ch.14 Asthma
+  {cat:"Obstructive Lung Disease", q:"During a severe asthma exacerbation, a previously loud wheeze suddenly becomes a \"silent chest.\" How should this be interpreted?",
+   options:["The patient is improving and moving more air","This is an ominous sign of critically reduced airflow, not improvement","It indicates the bronchospasm has fully resolved","It has no clinical significance"],
+   a:1, exp:"A silent chest in status asthmaticus usually means airflow has become so severely limited that not enough air is moving to generate a wheeze — a medical emergency, not a reassuring sign."},
+  {cat:"Obstructive Lung Disease", q:"Which spirometric finding would be expected during an acute asthma exacerbation?",
+   options:["Increased FEV1/FVC ratio with normal FVC","Reduced FEV1 and reduced FEV1/FVC ratio that improves significantly after bronchodilator","Reduced FVC with a normal or increased FEV1/FVC ratio","No change in any spirometric values"],
+   a:1, exp:"Asthma is an obstructive disease with reversible airflow limitation — FEV1 and FEV1/FVC fall during an exacerbation and characteristically improve substantially after bronchodilator administration, which supports the diagnosis.", scenario:"asthma"},
+
+  // Ch.15 Cystic Fibrosis
+  {cat:"Obstructive Lung Disease", q:"The sweat chloride test is used in the diagnostic workup of cystic fibrosis because CF causes:",
+   options:["Decreased sweat chloride due to a defective CFTR channel","Increased sweat chloride due to a defective CFTR chloride channel impairing normal reabsorption","No change in sweat electrolyte composition","Increased sweat production only, with normal electrolyte content"],
+   a:1, exp:"The defective CFTR protein in CF impairs chloride (and secondarily sodium) reabsorption in the sweat duct, leading to abnormally salty sweat — the basis for the sweat chloride test.", scenario:"cf"},
+  {cat:"Obstructive Lung Disease", q:"Chronic Pseudomonas aeruginosa colonization is a particularly significant concern in cystic fibrosis because it:",
+   options:["Is easily eradicated with a single course of oral antibiotics","Is associated with accelerated decline in lung function and is difficult to eradicate once established","Has no impact on CF prognosis","Only affects the gastrointestinal tract in CF"],
+   a:1, exp:"Pseudomonas readily forms biofilms in the thick CF mucus, is intrinsically resistant to many antibiotics, and chronic infection is linked to faster pulmonary decline — which is why aggressive early treatment and surveillance cultures matter.", scenario:"cf"},
+  // Ch.16 Bronchiectasis
+  {cat:"Obstructive Lung Disease", q:"Bronchiectasis is defined by which structural change in the airways?",
+   options:["Reversible bronchospasm without structural change","Permanent, abnormal dilation and destruction of bronchial walls","Isolated alveolar wall destruction with normal airways","Temporary airway edema that resolves completely"],
+   a:1, exp:"Bronchiectasis involves irreversible dilation and damage of the bronchial walls, typically from a cycle of infection and inflammation, distinguishing it from reversible obstructive processes like asthma.", scenario:"bronchiectasis"},
+  {cat:"Obstructive Lung Disease", q:"A hallmark clinical feature of bronchiectasis is:",
+   options:["Dry, nonproductive cough","Chronic cough with copious, often purulent sputum production","Complete absence of cough","Isolated exertional chest pain"],
+   a:1, exp:"The dilated, damaged airways in bronchiectasis pool secretions and become chronically infected, producing a persistent cough with large volumes of purulent sputum — often the clue that first suggests the diagnosis.", scenario:"bronchiectasis"},
+
+  // Ch.17 Atelectasis
+  {cat:"Patient Assessment", q:"Postoperative atelectasis most commonly develops because of:",
+   options:["Excessive deep breathing and coughing","Shallow breathing from incisional pain, leading to under-ventilation of dependent lung regions","Bronchospasm from anesthesia alone","Increased mucociliary clearance after surgery"],
+   a:1, exp:"Pain-limited shallow breathing after surgery reduces tidal volumes and sighs, letting dependent alveoli gradually collapse — which is why incentive spirometry and adequate analgesia are core prevention strategies.", scenario:"atelectasis"},
+  {cat:"Patient Assessment", q:"Which finding would you expect on auscultation over an area of atelectasis?",
+   options:["Loud wheezing","Diminished or absent breath sounds over the collapsed area","Pleural friction rub only","Normal vesicular breath sounds"],
+   a:1, exp:"Collapsed, unventilated alveoli transmit little to no airflow sound, so breath sounds are typically diminished or absent over an atelectatic region.", scenario:"atelectasis"},
+
+  // Ch.18 Pneumonia
+  {cat:"Infectious Disease", q:"Egophony (\"E-to-A\" change) heard over a lung region is a classic sign of:",
+   options:["Pneumothorax","Consolidation, such as from lobar pneumonia","Simple bronchospasm","A normal finding"],
+   a:1, exp:"Consolidated lung tissue transmits voice sounds more efficiently and alters their character, producing the classic E-to-A egophony change heard over pneumonic consolidation."},
+  {cat:"Infectious Disease", q:"A chest x-ray showing a lobar, homogeneous opacity with air bronchograms most strongly suggests:",
+   options:["Simple pneumothorax","Lobar pneumonia with alveolar consolidation","Pure pleural effusion with no parenchymal disease","A normal chest x-ray variant"],
+   a:1, exp:"Air bronchograms appear when fluid-filled/consolidated alveoli surround still air-filled bronchi, making them visible against the opacified background — a classic sign of alveolar consolidation as in lobar pneumonia.",
+   scenario:"pneumonia",
+   img:{ url:"https://commons.wikimedia.org/wiki/Special:FilePath/X-ray_of_lobar_pneumonia.jpg", caption:"Chest x-ray showing lobar pneumonia with alveolar consolidation.", credit:"Wikimedia Commons (CC0)" }},
+
+  // Ch.19 Tuberculosis
+  {cat:"Infectious Disease", q:"A patient with suspected active pulmonary tuberculosis should be placed on which type of isolation precautions?",
+   options:["Contact precautions only","Droplet precautions only","Airborne precautions (negative-pressure room, N95 respirator)","No isolation is needed until confirmed by culture"],
+   a:2, exp:"TB is spread via small airborne droplet nuclei that can remain suspended and travel on air currents, requiring airborne precautions — a negative-pressure room and N95 (or higher) respiratory protection for anyone entering.",
+   scenario:"tuberculosis"},
+  {cat:"Infectious Disease", q:"Classic chest x-ray findings of reactivation (post-primary) pulmonary tuberculosis most often involve:",
+   options:["Lower lobe consolidation only","Upper lobe infiltrates with possible cavitation","Isolated pleural effusion with a normal parenchyma","Diffuse miliary nodules in every case"],
+   a:1, exp:"Reactivation TB has a predilection for the apical/posterior segments of the upper lobes, where oxygen tension favors the organism, often progressing to cavitary lesions.",
+   scenario:"tuberculosis",
+   img:{ url:"https://commons.wikimedia.org/wiki/Special:FilePath/Tuberculosis-x-ray.jpg", caption:"Chest x-ray of advanced bilateral pulmonary tuberculosis with apical cavitation.", credit:"CDC Public Health Image Library (public domain)" }},
+
+  // Ch.20 Pulmonary Edema
+  {cat:"Cardiopulmonary Disease", q:"Pink, frothy sputum in a patient with acute dyspnea and bilateral crackles is most classically associated with:",
+   options:["Acute cardiogenic pulmonary edema","Simple viral upper respiratory infection","Chronic stable bronchitis","Uncomplicated asthma"],
+   a:0, exp:"Pink, frothy sputum reflects fluid and a small amount of blood leaking into the alveoli from elevated pulmonary capillary pressure, a classic (though not universal) sign of acute cardiogenic pulmonary edema.", scenario:"edema"},
+  {cat:"Cardiopulmonary Disease", q:"In cardiogenic pulmonary edema, positive pressure ventilation (or CPAP/BiPAP) improves the patient's condition partly by:",
+   options:["Directly curing the underlying heart failure","Reducing venous return (preload) and left ventricular afterload, in addition to recruiting flooded alveoli","Increasing pulmonary capillary hydrostatic pressure further","Having no cardiovascular effect at all"],
+   a:1, exp:"Positive intrathoracic pressure decreases venous return to the heart and can reduce left ventricular afterload, easing the heart's workload, while also recruiting fluid-filled alveoli to improve oxygenation.", scenario:"edema"},
+
+  // Ch.21 Pulmonary Vascular Disease (PE / Pulmonary HTN)
+  {cat:"Cardiopulmonary Disease", q:"The classic gas-exchange abnormality produced by an acute pulmonary embolism is:",
+   options:["Increased shunt with no change in dead space","Increased physiologic dead space, since ventilated alveoli are no longer perfused","Decreased minute ventilation only","Improved V/Q matching"],
+   a:1, exp:"A clot blocks perfusion to ventilated alveoli, creating wasted (dead-space) ventilation — the reason PaCO2-EtCO2 gradients widen and why patients often hyperventilate to compensate.", scenario:"pe"},
+  {cat:"Cardiopulmonary Disease", q:"Chronic pulmonary arterial hypertension leads to right ventricular strain primarily because:",
+   options:["The right ventricle must generate higher pressures against increased pulmonary vascular resistance over time","The left ventricle directly transmits pressure to the right side","Pulmonary hypertension has no hemodynamic consequence","It only affects the pulmonary veins, not the right heart"],
+   a:0, exp:"Sustained elevation in pulmonary artery pressure forces the right ventricle to work harder to eject blood into the lungs, and over time this chronic pressure load leads to right ventricular hypertrophy, strain, and eventually failure.", scenario:"pulm_htn"},
+
+  // Ch.22 Flail Chest
+  {cat:"Chest Wall & Pleural Disease", q:"Paradoxical chest wall movement in flail chest occurs because:",
+   options:["The chest wall is unusually rigid from multiple rib fractures","A free-floating segment of ribs, fractured in two or more places each, moves opposite to the rest of the chest during breathing","The diaphragm is paralyzed","The pleura has become adherent to the chest wall"],
+   a:1, exp:"When several adjacent ribs are fractured in at least two places, that segment loses continuity with the rest of the rigid chest wall and is pulled in during inspiration (and pushed out during expiration) by pressure changes rather than moving with the chest — the paradoxical motion.", scenario:"flail"},
+  {cat:"Chest Wall & Pleural Disease", q:"The most important underlying concern in flail chest is often not the rib fractures themselves but:",
+   options:["The cosmetic deformity of the chest wall","The underlying pulmonary contusion and pain-limited ventilation, which can lead to respiratory failure","Immediate need for rib fixation surgery in all cases","Guaranteed need for permanent mechanical ventilation"],
+   a:1, exp:"The underlying lung (pulmonary) contusion plus splinting from pain are often what drive hypoxemia and respiratory compromise — management focuses heavily on analgesia, secretion clearance, and supporting ventilation as needed.", scenario:"flail"},
+
+  // Ch.23 Pneumothorax
+  {cat:"Chest Wall & Pleural Disease", q:"In a tension pneumothorax, tracheal deviation occurs toward which side?",
+   options:["Toward the affected (pneumothorax) side","Away from the affected side, pushed by increasing pressure","There is no tracheal deviation in tension pneumothorax","Deviation is unpredictable and not clinically useful"],
+   a:1, exp:"Progressively trapped air under pressure on the affected side pushes mediastinal structures, including the trachea, toward the opposite (unaffected) side — a hallmark of tension physiology.", scenario:"ptx"},
+  {cat:"Chest Wall & Pleural Disease", q:"Immediate management of a suspected tension pneumothorax in an unstable patient is:",
+   options:["Obtain a CT scan first to confirm the diagnosis","Needle decompression or chest tube placement without delay for imaging","High-dose diuretics","Immediate intubation is always the first and only step"],
+   a:1, exp:"Tension pneumothorax is a clinical diagnosis in an unstable patient — decompression should not be delayed for imaging, since ongoing pressure buildup causes obstructive shock and can be rapidly fatal.", scenario:"ptx"},
+
+  // Ch.24 Pleural Effusion and Empyema
+  {cat:"Chest Wall & Pleural Disease", q:"Thoracentesis fluid analysis showing a low pleural fluid protein-to-serum protein ratio and low LDH is most consistent with:",
+   options:["An exudative effusion","A transudative effusion, such as from heart failure","Empyema","Hemothorax"],
+   a:1, exp:"Transudative effusions (low protein/LDH ratios per Light's criteria) usually result from a systemic process like heart failure raising hydrostatic pressure, rather than a local inflammatory or infectious process.", scenario:"pleural_effusion"},
+  {cat:"Chest Wall & Pleural Disease", q:"Grossly purulent pleural fluid on thoracentesis defines which condition?",
+   options:["Simple transudative effusion","Empyema","Chylothorax","Hemothorax"],
+   a:1, exp:"Empyema is, by definition, frank pus in the pleural space, usually from a bacterial infection extending into the pleura — it typically requires drainage, not just antibiotics alone.", scenario:"pleural_effusion"},
+
+  // Ch.25 Kyphoscoliosis
+  {cat:"Chest Wall & Pleural Disease", q:"Severe kyphoscoliosis produces which pattern on pulmonary function testing?",
+   options:["An obstructive pattern with a low FEV1/FVC ratio","A restrictive pattern with reduced lung volumes but a preserved or increased FEV1/FVC ratio","No change in pulmonary function","Isolated diffusion impairment with normal volumes"],
+   a:1, exp:"The distorted chest wall in kyphoscoliosis physically restricts lung expansion, lowering FVC and total lung capacity while the FEV1/FVC ratio stays normal or even rises — a classic restrictive picture."},
+  {cat:"Chest Wall & Pleural Disease", q:"Patients with severe kyphoscoliosis are at particular long-term risk for developing:",
+   options:["Emphysema exclusively","Chronic alveolar hypoventilation and cor pulmonale","Reversible asthma","Spontaneous resolution of restriction with age"],
+   a:1, exp:"Chronic restriction from a deformed chest wall increases the work of breathing and can lead to progressive hypoventilation, chronic hypoxemia, and eventually pulmonary hypertension with right heart strain (cor pulmonale)."},
+
+  // Ch.26 Cancer of the Lung
+  {cat:"Oncology & Interstitial Disease", q:"A new, unilateral pleural effusion in a long-time smoker with unexplained weight loss should raise particular concern for:",
+   options:["Simple viral pleuritis","Underlying lung malignancy with malignant pleural involvement","Normal age-related pleural change","Acute pulmonary embolism only"],
+   a:1, exp:"A malignant pleural effusion is a common way lung cancer first presents; the combination of smoking history, constitutional symptoms, and a new effusion warrants prompt oncologic workup.", scenario:"lung_cancer"},
+  {cat:"Oncology & Interstitial Disease", q:"Clubbing and hypertrophic pulmonary osteoarthropathy in a patient with a lung mass are considered:",
+   options:["Unrelated incidental findings","A possible paraneoplastic manifestation of lung cancer","Diagnostic exclusively of benign disease","A sign that the mass cannot be malignant"],
+   a:1, exp:"Certain lung cancers, particularly non-small cell types, can produce paraneoplastic syndromes including clubbing and painful hypertrophic osteoarthropathy, which should heighten suspicion rather than reassure.", scenario:"lung_cancer"},
+
+  // Ch.27 Interstitial Lung Disease
+  {cat:"Oncology & Interstitial Disease", q:"Fine, \"Velcro-like\" bibasilar crackles on auscultation, combined with a restrictive PFT pattern and reduced DLCO, are classic for:",
+   options:["Asthma","Idiopathic pulmonary fibrosis / interstitial lung disease","Simple bronchitis","Isolated pneumothorax"],
+   a:1, exp:"Fibrotic thickening of the interstitium classically produces fine, dry, Velcro-quality crackles at the bases along with a restrictive pattern and impaired gas diffusion — a combination fairly specific for interstitial lung disease."},
+  {cat:"Oncology & Interstitial Disease", q:"In interstitial lung disease, hypoxemia characteristically worsens with:",
+   options:["Rest only, with no change during activity","Exertion, due to a widened diffusion-limited gas exchange defect with faster capillary transit time","Sleep exclusively","It never changes regardless of activity"],
+   a:1, exp:"Thickened alveolar-capillary membranes limit oxygen diffusion; with exercise, blood moves through the pulmonary capillaries faster, leaving less time for the impaired diffusion to occur, which characteristically worsens desaturation on exertion.", scenario:"fibrosis"},
+
+  // Ch.28 ARDS
+  {cat:"Mechanical Ventilation", q:"By the Berlin definition, ARDS requires onset of symptoms within what timeframe of a known clinical insult?",
+   options:["Within 1 week","Within 1 month","Within 6 months","There is no time requirement"],
+   a:0, exp:"The Berlin definition specifies new or worsening respiratory symptoms within one week of a known insult (e.g., sepsis, aspiration, pneumonia), along with bilateral opacities and a qualifying P/F ratio, to distinguish ARDS from chronic processes.", scenario:"ards"},
+  {cat:"Mechanical Ventilation", q:"Why is a lower tidal volume strategy (around 6 mL/kg predicted body weight) preferred in ARDS?",
+   options:["It increases the risk of volutrauma","It reduces overdistension of already-injured, non-recruited alveoli and improves outcomes","It has been shown to worsen mortality compared to traditional tidal volumes","It is only relevant for pediatric patients"],
+   a:1, exp:"ARDS lungs have unevenly distributed compliance, so \"normal\" tidal volumes can overdistend the healthier remaining alveoli; lower tidal volumes reduce this ventilator-induced lung injury and have been shown to improve survival.", scenario:"ards"},
+
+  // Ch.29 Guillain-Barré Syndrome
+  {cat:"Neuromuscular Disease", q:"In Guillain-Barré syndrome, respiratory failure develops primarily because of:",
+   options:["Direct destruction of lung parenchyma","Ascending peripheral neuromuscular weakness that eventually involves the respiratory muscles","Airway obstruction from bronchospasm","Primary cardiac failure"],
+   a:1, exp:"GBS is an autoimmune polyneuropathy that classically causes ascending weakness; when it reaches the diaphragm and intercostal muscles, the patient can no longer generate adequate tidal volumes despite having normal lungs.", scenario:"gbs"},
+  {cat:"Neuromuscular Disease", q:"Which bedside measurement is most useful for trending respiratory muscle strength and predicting the need for ventilatory support in GBS?",
+   options:["Peak expiratory flow only","Serial vital capacity and maximum inspiratory pressure (NIF/MIP) measurements","Chest x-ray","Sputum culture"],
+   a:1, exp:"Trending vital capacity and negative inspiratory force gives an early warning of declining respiratory muscle strength in neuromuscular disease, often before ABGs or oxygenation actually deteriorate.", scenario:"gbs"},
+
+  // Ch.30 Myasthenia Gravis
+  {cat:"Neuromuscular Disease", q:"Myasthenia gravis causes muscle weakness through which mechanism?",
+   options:["Autoantibodies against acetylcholine receptors at the neuromuscular junction","Direct viral destruction of motor neurons","Primary demyelination of peripheral nerves","Structural muscle fiber replacement by fibrous tissue"],
+   a:0, exp:"MG is an autoimmune disease in which antibodies block or destroy acetylcholine receptors at the neuromuscular junction, impairing the transmission of nerve signals to muscle and causing fatigable weakness.", scenario:"myasthenic"},
+  {cat:"Neuromuscular Disease", q:"A hallmark clinical feature that helps distinguish myasthenia gravis from other neuromuscular diseases is:",
+   options:["Weakness that is constant and does not change throughout the day","Fatigable weakness that worsens with repeated activity and improves with rest","Weakness limited exclusively to the lower extremities","Complete sparing of the ocular and facial muscles"],
+   a:1, exp:"MG classically causes weakness that worsens with sustained or repeated muscle use (fatigability) and improves with rest, often first noticed as ptosis or diplopia that gets worse through the day.", scenario:"myasthenic"},
+  // Ch.31 Cardiopulmonary Assessment/Care in Neuromuscular Disease
+  {cat:"Neuromuscular Disease", q:"For a patient with a chronic progressive neuromuscular disease, which airway clearance approach is often most appropriate given a weak cough?",
+   options:["Chest x-ray alone with no airway clearance intervention","Mechanical insufflation-exsufflation (cough assist) and/or manually assisted coughing","Withholding all secretion clearance therapy","Deep suctioning as the sole method with no other adjuncts"],
+   a:1, exp:"When expiratory muscle weakness prevents an effective cough, insufflation-exsufflation devices (or manually assisted coughing techniques) simulate a cough's rapid pressure change to help mobilize secretions without relying on the patient's own expiratory force."},
+  {cat:"Neuromuscular Disease", q:"In chronic neuromuscular disease, nocturnal noninvasive ventilation is often started based on which finding, even if daytime gases look reasonable?",
+   options:["A normal daytime PaCO2 with no other findings","Evidence of nocturnal hypoventilation (e.g., rising overnight CO2 or symptoms of poor sleep/morning headache)","Patient preference alone with no diagnostic testing","Presence of a cough only"],
+   a:1, exp:"Respiratory muscles weaken further during REM sleep, so nocturnal hypoventilation often appears before daytime blood gases become abnormal — which is why sleep-related CO2 monitoring or symptoms often trigger starting nocturnal NIV."},
+
+  // Ch.32 Sleep Apnea
+  {cat:"Sleep Medicine", q:"Obstructive sleep apnea is defined by:",
+   options:["Absence of respiratory effort during pauses in airflow","Repeated episodes of upper airway collapse during sleep despite ongoing respiratory effort","A central nervous system failure to signal breathing","Daytime apneic episodes only"],
+   a:1, exp:"In OSA, the upper airway physically collapses or narrows during sleep even though the brain continues sending the signal to breathe — distinguishing it from central sleep apnea, where the drive to breathe itself is absent.", scenario:"osa_crisis"},
+  {cat:"Sleep Medicine", q:"The apnea-hypopnea index (AHI) obtained during polysomnography is used to:",
+   options:["Measure blood glucose overnight","Quantify the number of apneas and hypopneas per hour of sleep to grade OSA severity","Measure heart rate variability only","Assess daytime alertness exclusively"],
+   a:1, exp:"AHI — the number of apnea/hypopnea events per hour of sleep — is the key metric used to diagnose and grade the severity of sleep apnea (mild, moderate, severe).", scenario:"osa_crisis"},
+
+  // Ch.33 Newborn Assessment
+  {cat:"Neonatal & Pediatric Care", q:"The Apgar score assesses a newborn at 1 and 5 minutes of life based on which components?",
+   options:["Weight, length, and head circumference","Heart rate, respiratory effort, muscle tone, reflex irritability, and color","Blood glucose, temperature, and hematocrit","Gestational age and birth weight only"],
+   a:1, exp:"Apgar scoring (Appearance, Pulse, Grimace, Activity, Respiration) gives a quick standardized snapshot of a newborn's transition to extrauterine life across five simple clinical signs."},
+  {cat:"Neonatal & Pediatric Care", q:"A newborn's gestational age assessment (e.g., via the Ballard score) is important because it helps predict:",
+   options:["The infant's eventual adult height","Risk for conditions related to prematurity, such as surfactant deficiency","The mother's future fertility","The need for circumcision"],
+   a:1, exp:"Accurately estimating gestational age flags how immature the infant's organ systems (especially the lungs) likely are, guiding anticipation of complications like respiratory distress syndrome from surfactant deficiency."},
+
+  // Ch.34 Pediatric Assessment
+  {cat:"Neonatal & Pediatric Care", q:"In assessing a distressed infant, nasal flaring and subcostal/intercostal retractions are signs of:",
+   options:["Normal infant breathing pattern","Increased work of breathing","Adequate, unlabored ventilation","A finding unique to cardiac disease only"],
+   a:1, exp:"Infants have compliant chest walls and rely heavily on accessory muscles when work of breathing increases; nasal flaring and retractions are classic visual cues of respiratory distress in this age group."},
+  {cat:"Neonatal & Pediatric Care", q:"Because infants are obligate nose breathers for the first several months of life, which condition can cause significant respiratory distress out of proportion to its apparent size?",
+   options:["Mild finger clubbing","Nasal obstruction (e.g., from congestion or choanal atresia)","Isolated skin rash","Umbilical hernia"],
+   a:1, exp:"Since young infants preferentially breathe through the nose, even modest nasal blockage can markedly compromise their ability to move air, unlike in older children and adults who can readily mouth-breathe."},
+
+  // Ch.35 Meconium Aspiration Syndrome
+  {cat:"Neonatal & Pediatric Care", q:"Meconium aspiration syndrome most often occurs in the setting of:",
+   options:["Preterm delivery with immature lungs only","Post-term or stressed deliveries where meconium is passed in utero and aspirated before or during birth","Elective cesarean section with no fetal distress","Normal amniotic fluid with no meconium staining"],
+   a:1, exp:"Fetal distress or post-maturity increases the likelihood of in-utero meconium passage; if the infant gasps or breathes before/during delivery, thick meconium can be aspirated into the airways and lungs."},
+  {cat:"Neonatal & Pediatric Care", q:"Meconium aspiration syndrome can cause a chemical pneumonitis and also predispose to which complication from ball-valve airway obstruction?",
+   options:["Guaranteed normal lung function with no complications","Air trapping and pneumothorax/pulmonary air leak","Immediate resolution without any respiratory support","Isolated bradycardia with no pulmonary involvement"],
+   a:1, exp:"Thick meconium can partially obstruct small airways in a ball-valve pattern, letting air in but trapping it on exhalation — leading to hyperinflation and a heightened risk of air leak syndromes like pneumothorax."},
+
+  // Ch.36 Transient Tachypnea of the Newborn
+  {cat:"Neonatal & Pediatric Care", q:"Transient tachypnea of the newborn (TTN) is thought to result from:",
+   options:["A permanent surfactant deficiency","Delayed clearance of fetal lung fluid after birth","Bacterial pneumonia acquired in utero","Structural malformation of the airway"],
+   a:1, exp:"TTN occurs when fetal lung fluid isn't cleared as quickly as normal after birth (more common after cesarean delivery without labor), causing transient tachypnea that typically resolves within 24–72 hours."},
+  {cat:"Neonatal & Pediatric Care", q:"Compared to respiratory distress syndrome (RDS), TTN typically follows which clinical course?",
+   options:["Progressive worsening over days requiring surfactant replacement","A relatively mild, self-limited course that resolves within about 24–72 hours","Universal need for prolonged mechanical ventilation","Onset only after the first week of life"],
+   a:1, exp:"Unlike RDS, which reflects true surfactant deficiency and can progressively worsen, TTN is generally mild and self-limited, resolving as the retained fetal lung fluid clears."},
+
+  // Ch.37 Respiratory Distress Syndrome (neonatal)
+  {cat:"Neonatal & Pediatric Care", q:"Neonatal respiratory distress syndrome is primarily caused by:",
+   options:["Excess surfactant production","Surfactant deficiency in a premature lung, leading to alveolar collapse and increased surface tension","Meconium aspiration exclusively","A structural diaphragmatic defect"],
+   a:1, exp:"Type II pneumocytes haven't matured enough to produce adequate surfactant in premature infants, so alveolar surface tension stays high and alveoli tend to collapse at end-expiration, driving the disease."},
+  {cat:"Neonatal & Pediatric Care", q:"Antenatal corticosteroids are given to mothers at risk of preterm delivery primarily to:",
+   options:["Treat maternal hypertension","Accelerate fetal lung surfactant production and reduce the severity of neonatal RDS","Delay labor indefinitely","Treat maternal gestational diabetes"],
+   a:1, exp:"Antenatal steroids cross the placenta and speed maturation of the fetal lung's surfactant system, meaningfully reducing the incidence and severity of RDS in infants delivered preterm."},
+
+  // Ch.38 Pulmonary Air Leak Syndromes
+  {cat:"Neonatal & Pediatric Care", q:"Pulmonary interstitial emphysema (PIE) in a ventilated neonate reflects:",
+   options:["Air dissecting into the pulmonary interstitium from overdistended, ruptured alveoli","A normal variant of neonatal chest imaging","Fluid accumulation in the pleural space","A congenital heart defect"],
+   a:0, exp:"High ventilating pressures/volumes in immature, unevenly compliant lungs can rupture alveoli, letting air track into the surrounding interstitial tissue — seen as PIE on x-ray, and a risk factor for pneumothorax and pneumomediastinum."},
+  {cat:"Neonatal & Pediatric Care", q:"In a ventilated neonate at risk for air leak syndromes, a general ventilator strategy to reduce this risk includes:",
+   options:["Using the highest tolerable pressures and volumes at all times","Using the lowest effective pressures/volumes and permissive hypercapnia where appropriate","Eliminating PEEP entirely","Ignoring peak inspiratory pressure trends"],
+   a:1, exp:"Minimizing peak/plateau pressures and tidal volumes to the lowest level that achieves adequate gas exchange (accepting a somewhat higher CO2 when safe) reduces alveolar overdistension and the risk of air leak."},
+
+  // Ch.39 RSV / Bronchiolitis
+  {cat:"Neonatal & Pediatric Care", q:"Bronchiolitis in infants, most commonly caused by RSV, primarily produces airflow obstruction through:",
+   options:["Laryngeal edema alone","Inflammation, edema, and mucus plugging of the small airways (bronchioles)","Isolated large-airway (tracheal) obstruction","Alveolar consolidation without airway involvement"],
+   a:1, exp:"RSV bronchiolitis inflames and clogs the small airways with mucus and sloughed epithelium; because infants' bronchioles are already narrow, even modest swelling causes significant airflow obstruction and air trapping."},
+  {cat:"Neonatal & Pediatric Care", q:"Unlike asthma, bronchodilator response in RSV bronchiolitis is typically:",
+   options:["Dramatic and consistently helpful in all patients","Inconsistent, and routine bronchodilator use is not strongly supported by evidence","Guaranteed to fully resolve the obstruction","Contraindicated in every case"],
+   a:1, exp:"Because the obstruction in bronchiolitis is driven more by mucus, edema, and debris than by smooth muscle bronchospasm, response to bronchodilators is inconsistent, and routine use isn't strongly recommended by current guidelines.", scenario:"bronchiolitis"},
+
+  // Ch.40 Bronchopulmonary Dysplasia
+  {cat:"Neonatal & Pediatric Care", q:"Bronchopulmonary dysplasia (BPD) develops as a consequence of:",
+   options:["A single episode of transient tachypnea","Lung injury in a premature infant from a combination of prematurity, oxygen toxicity, and ventilator-induced trauma over time","Full-term delivery with normal lung maturity","An isolated congenital heart defect with no pulmonary component"],
+   a:1, exp:"BPD is a chronic lung disease of prematurity resulting from the interplay of immature lungs, prolonged oxygen exposure, and mechanical ventilation trauma during the newborn period, leading to abnormal, dysplastic lung development.", scenario:"bronchiolitis"},
+  {cat:"Neonatal & Pediatric Care", q:"A key modern strategy to reduce the incidence/severity of BPD in preterm infants is:",
+   options:["Using the highest FiO2 possible from birth","Using the lowest effective FiO2 and gentle ventilation strategies (including early noninvasive support where possible)","Avoiding surfactant therapy entirely","Delaying all respiratory support regardless of distress"],
+   a:1, exp:"Because oxygen toxicity and ventilator trauma both contribute to BPD, current practice favors minimizing FiO2 exposure and using gentler modes (like early CPAP) whenever the infant's condition allows."},
+
+  // Ch.41 Congenital Diaphragmatic Hernia
+  {cat:"Neonatal & Pediatric Care", q:"Congenital diaphragmatic hernia causes severe respiratory distress at birth primarily because:",
+   options:["It directly damages the heart valves","Abdominal organs herniate into the chest during fetal development, compressing the lung and often causing pulmonary hypoplasia","It is unrelated to lung development","It only affects the esophagus, not breathing"],
+   a:1, exp:"When abdominal contents herniate through a diaphragmatic defect early in gestation, the developing lung on that side (and sometimes both sides) is compressed, resulting in pulmonary hypoplasia and often significant pulmonary hypertension at birth."},
+  {cat:"Neonatal & Pediatric Care", q:"In a newborn with a diagnosed congenital diaphragmatic hernia and respiratory distress, a key initial airway management principle is to:",
+   options:["Use bag-mask ventilation aggressively to inflate the lungs","Avoid bag-mask ventilation when possible (to prevent inflating the herniated bowel) and secure the airway with intubation and gentle ventilation","Delay any respiratory support until after surgical repair","Position the infant supine with no other precautions"],
+   a:1, exp:"Bag-mask ventilation can inflate herniated bowel in the chest and worsen lung compression, so these infants are typically intubated early and ventilated gently rather than bag-masked, while surgical repair is planned once stabilized."},
+
+  // Ch.42 Congenital Heart Disease
+  {cat:"Neonatal & Pediatric Care", q:"A newborn with a cyanotic congenital heart defect (e.g., transposition of the great arteries) classically shows:",
+   options:["Improvement in oxygen saturation with supplemental oxygen (a positive hyperoxia test)","Little to no improvement in oxygenation despite 100% supplemental oxygen (a negative/failed hyperoxia test)","Normal oxygen saturation at all times","Symptoms exclusively related to the GI tract"],
+   a:1, exp:"In cyanotic heart disease, blood bypasses the lungs or mixes poorly regardless of alveolar oxygen levels, so saturation fails to rise significantly with 100% oxygen — helping distinguish a cardiac cause of cyanosis from a primary lung problem."},
+  {cat:"Neonatal & Pediatric Care", q:"In certain ductal-dependent congenital heart defects, prostaglandin E1 infusion is used to:",
+   options:["Close the ductus arteriosus as quickly as possible","Keep the ductus arteriosus open to maintain systemic or pulmonary blood flow until surgical correction","Treat neonatal jaundice","Lower the infant's blood pressure"],
+   a:1, exp:"Some defects depend on a patent ductus arteriosus to supply either the systemic or pulmonary circulation; prostaglandin E1 keeps the ductus open as a temporizing measure until definitive surgery can be performed."},
+
+  // Ch.43 Croup
+  {cat:"Airway Management", q:"The classic \"steeple sign\" on a neck x-ray, along with a barky cough and inspiratory stridor, is associated with:",
+   options:["Epiglottitis","Croup (laryngotracheobronchitis)","Bacterial tracheitis exclusively","Foreign body aspiration in the lower airway"],
+   a:1, exp:"Subglottic narrowing from viral croup produces the tapered \"steeple sign\" on an AP neck film, along with the characteristic barky/seal-like cough and inspiratory stridor."},
+  {cat:"Airway Management", q:"Nebulized racemic epinephrine is used in croup because it:",
+   options:["Treats the underlying viral infection directly","Provides temporary vasoconstriction of the swollen subglottic mucosa, reducing airway narrowing","Permanently cures the airway swelling","Is a bronchodilator acting on the lower airways only"],
+   a:1, exp:"Racemic epinephrine's vasoconstrictive effect shrinks swollen subglottic mucosa, temporarily improving airflow — though its effect wears off over a couple of hours, so patients are typically observed afterward.", scenario:"croup"},
+
+  // Ch.44 Near Drowning
+  {cat:"Patient Assessment", q:"The primary pulmonary injury pattern following a significant submersion (near-drowning) event, regardless of fresh or salt water, is:",
+   options:["No lung injury occurs if the patient survives","Surfactant washout/dysfunction and injury leading to a picture similar to ARDS","Isolated upper airway obstruction only","Immediate and permanent lung fibrosis in all survivors"],
+   a:1, exp:"Aspirated water (fresh or salt) disrupts surfactant and injures the alveolar-capillary membrane, often producing a clinical and pathophysiologic picture much like ARDS, regardless of the water's salinity.", scenario:"drowning"},
+  {cat:"Patient Assessment", q:"A patient rescued from submersion who initially appears well should still be monitored for several hours because of the risk of:",
+   options:["Immediate and complete resolution with no further risk","Delayed-onset pulmonary edema/respiratory deterioration (\"secondary drowning\")","Guaranteed need for surgery","Permanent hearing loss as the primary concern"],
+   a:1, exp:"Lung injury and edema from aspiration can evolve over several hours, so even initially asymptomatic submersion patients are typically observed for a period to catch delayed respiratory deterioration.", scenario:"drowning"},
+
+  // Ch.45 Smoke Inhalation, Thermal Injury, CO Poisoning
+  {cat:"Patient Assessment", q:"In a patient rescued from a house fire with a normal-appearing SpO2 reading, which additional test should be strongly considered given possible carbon monoxide exposure?",
+   options:["Standard pulse oximetry is fully sufficient; no further testing needed","Co-oximetry to directly measure carboxyhemoglobin, since standard pulse oximetry cannot detect it","A chest x-ray only, with no blood testing","Peak flow measurement"],
+   a:1, exp:"Standard two-wavelength pulse oximetry reads carboxyhemoglobin as if it were oxyhemoglobin, giving a falsely reassuring SpO2; co-oximetry is needed to directly detect and quantify carbon monoxide exposure.", scenario:"smoke"},
+  {cat:"Patient Assessment", q:"Facial burns, singed nasal hair, and carbonaceous sputum in a fire victim should raise strong suspicion for:",
+   options:["No airway involvement — these are purely cosmetic findings","Thermal/inhalation injury to the airway with risk of rapidly progressive airway edema and obstruction","A fully stable airway requiring no further monitoring","Isolated gastrointestinal injury"],
+   a:1, exp:"These findings suggest heat and smoke were drawn into the upper airway; edema can progress rapidly over the following hours, so early evaluation for airway protection (sometimes early intubation) is a major priority even if the patient looks stable initially.", scenario:"smoke"},
+];
 
 </script>
 <script>
@@ -1557,7 +2005,8 @@ function initTopbar(){
 /* =====================================================================
    NBRC QUIZ MODE
    ===================================================================== */
-function quizPool(){ return state.quiz.category==="all" ? QUIZ_BANK : QUIZ_BANK.filter(q=>q.cat===state.quiz.category); }
+const ALL_QUIZ_QUESTIONS = [...QUIZ_BANK, ...EXTENDED_QUIZ_BANK];
+function quizPool(){ return state.quiz.category==="all" ? ALL_QUIZ_QUESTIONS : ALL_QUIZ_QUESTIONS.filter(q=>q.cat===state.quiz.category); }
 function pickQuizQuestion(){ const pool=quizPool(); state.quiz.currentQ = pool[Math.floor(Math.random()*pool.length)]; state.quiz.answered=false; renderQuizTab(); }
 function answerQuiz(i){
   if(state.quiz.answered) return;
@@ -1571,21 +2020,37 @@ function answerQuiz(i){
 function renderQuizTab(){
   const el = document.getElementById("tab-quiz");
   if(!state.quiz.currentQ) state.quiz.currentQ = quizPool()[0];
-  const cats = ["all", ...new Set(QUIZ_BANK.map(q=>q.cat))];
+  const cats = ["all", ...new Set(ALL_QUIZ_QUESTIONS.map(q=>q.cat))];
   const q = state.quiz.currentQ;
+  const imgBlock = q.img ? `
+    <div class="qimg-wrap">
+      <img class="qimg" src="${q.img.url}" alt="${(q.img.caption||'').replace(/"/g,'&quot;')}" loading="lazy" onerror="this.parentElement.style.display='none';">
+      <div class="qimg-cap">${q.img.caption || ""}${q.img.credit ? ' — ' + q.img.credit : ''}</div>
+    </div>` : '';
+  const scenarioBlock = q.scenario && SCENARIOS[q.scenario] ? `
+    <button class="btn-primary" id="btnPracticeScenario" style="background:#0d2a1a;border:1px solid #22c55e;color:#4ade80;margin-top:10px;width:auto;padding:8px 14px;">Practice this case in the simulator →</button>` : '';
   el.innerHTML = `
     <div class="qcat">${cats.map(c=>`<span data-cat="${c}" class="${state.quiz.category===c?'active':''}">${c==="all"?"All Categories":c}</span>`).join("")}</div>
     <div class="scorebar"><span id="scoreLine">Score: <b>${state.quiz.correct} / ${state.quiz.total}</b></span><span>${q.cat}</span></div>
     <div class="qbox">
       <div class="qmeta">NBRC Practice Question</div>
       <div class="qtext">${q.q}</div>
+      ${imgBlock}
       ${q.options.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}
       <div class="explain" id="qexplain" style="display:none;">${q.exp}</div>
+      ${scenarioBlock}
     </div>
     <div class="btn-row"><button class="btn-primary" id="btnNextQ">Next Question →</button></div>`;
   el.querySelectorAll(".qcat span").forEach(s=> s.onclick = () => { state.quiz.category = s.dataset.cat; pickQuizQuestion(); });
   el.querySelectorAll(".opt").forEach(b=> b.onclick = () => answerQuiz(+b.dataset.i));
   document.getElementById("btnNextQ").onclick = pickQuizQuestion;
+  const practiceBtn = document.getElementById("btnPracticeScenario");
+  if(practiceBtn) practiceBtn.onclick = () => {
+    document.getElementById("caseSelect").value = q.scenario;
+    loadScenario(q.scenario);
+    window.scrollTo({top:0, behavior:'smooth'});
+    logMsg(`Jumped into "${SCENARIOS[q.scenario].name}" from a quiz question.`);
+  };
 }
 
 /* =====================================================================
