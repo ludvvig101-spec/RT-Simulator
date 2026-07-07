@@ -207,6 +207,41 @@ input[type=range].f-range { width: 100%; accent-color: var(--primary); height: 1
 .logline b { color: #93c5fd; }
 #logList { max-height: 260px; overflow-y: auto; max-width: 780px; }
 
+/* Challenge mode */
+.challenge-pill { font-size: 10px; font-weight: 700; font-family: var(--mono); padding: 3px 10px; border-radius: 999px; letter-spacing: .05em; border: 1px solid; cursor: pointer; white-space: nowrap; background: transparent; }
+.challenge-pill.off { color: var(--muted); border-color: var(--border); }
+.challenge-pill.on { color: #c084fc; border-color: #c084fc; background: rgba(192,132,252,.1); }
+.timer-pill { font-size: 12px; font-weight: 700; font-family: var(--mono); padding: 3px 12px; border-radius: 999px; border: 1px solid; letter-spacing: .04em; }
+.timer-pill.t-safe { color: #4ade80; border-color: rgba(74,222,128,.4); background: rgba(74,222,128,.08); }
+.timer-pill.t-warn { color: #fbbf24; border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.08); }
+.timer-pill.t-crit { color: #f87171; border-color: rgba(248,113,113,.5); background: rgba(248,113,113,.12); animation: blink-border .7s infinite; }
+
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(3,6,12,.82); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; max-width: 720px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.modal-hd { padding: 20px 24px; border-bottom: 1px solid var(--border2); }
+.modal-hd.fail { background: linear-gradient(180deg, rgba(127,29,29,.25), transparent); }
+.modal-hd.success { background: linear-gradient(180deg, rgba(20,83,45,.3), transparent); }
+.modal-hd h2 { font-family: Inter, sans-serif; font-size: 20px; margin: 0 0 4px; }
+.modal-hd.fail h2 { color: #f87171; }
+.modal-hd.success h2 { color: #4ade80; }
+.modal-hd p { font-size: 12px; color: var(--muted); margin: 0; font-family: var(--mono); }
+.modal-body { padding: 20px 24px; }
+.pm-section { margin-bottom: 18px; }
+.pm-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #818cf8; margin: 0 0 10px; font-family: var(--mono); }
+.pm-vitals { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 8px; }
+.pm-vital { border: 1px solid var(--border2); border-radius: 6px; padding: 8px; background: #0d1520; }
+.pm-vital .k { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+.pm-vital .v { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+.pm-fix { font-size: 12px; color: var(--text2); padding: 8px 0; border-bottom: 1px solid #0f1a26; line-height: 1.6; }
+.pm-fix:last-child { border-bottom: none; }
+.pm-fix b { color: #fbbf24; }
+.pm-med-missed { font-size: 12px; color: var(--text2); padding: 6px 0; }
+.pm-med-missed b { color: #4ade80; }
+.pm-timeline { max-height: 160px; overflow-y: auto; }
+.modal-actions { display: flex; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid var(--border2); }
+.modal-actions .btn-primary { flex: 1; }
+
 .med-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #0f1a26; }
 .med-row:last-child { border-bottom: none; }
 .med-info { flex: 1; min-width: 0; }
@@ -253,7 +288,9 @@ input[type=range].f-range { width: 100%; accent-color: var(--primary); height: 1
   <div style="flex:1"></div>
 
   <span id="simClock" style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-right:8px;">t+00:00</span>
-  <span id="overallStatus" class="status-pill pill-stable">Stable</span>
+  <button id="challengeToggle" class="challenge-pill off">🎯 Timed Challenge: Off</button>
+  <span id="timerPill" class="timer-pill t-safe" style="display:none;margin-left:6px;">05:00</span>
+  <span id="overallStatus" class="status-pill pill-stable" style="margin-left:8px;">Stable</span>
 </div>
 
 <!-- ══ APP GRID ══════════════════════════════════════════════════ -->
@@ -290,6 +327,10 @@ input[type=range].f-range { width: 100%; accent-color: var(--primary); height: 1
 </div>
 
 <!-- ══ STUDY DRAWER ═══════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="challengeModal">
+  <div class="modal-box" id="challengeModalBox"></div>
+</div>
+
 <div class="drawer">
   <div class="tabbar">
     <button class="tabbtn active" data-tab="quiz">NBRC Quiz Bank</button>
@@ -1198,7 +1239,8 @@ let state = {
   simSeconds: 0,
   log: [],
   quiz: { category: "all", correct: 0, total: 0, currentQ: null },
-  abgTrain: { current: null, correct: 0, total: 0 }
+  abgTrain: { current: null, correct: 0, total: 0 },
+  challenge: { enabled: false, active: false, timeLimit: 0, timeLeft: 0, timerId: null, medsGiven: [], startLogLen: 0, startTier: null }
 };
 
 function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -1302,6 +1344,7 @@ function ibwKg(){
 function loadScenario(key){
   const s = SCENARIOS[key];
   if(!s) return;
+  if(state.challenge.active) cancelChallenge();
   state.scenarioKey = key;
   state.scenario = { ...s, mech: { ...s.mech }, vent: { ...s.vent } };
   state.intubated = s.intubated;
@@ -1315,6 +1358,7 @@ function loadScenario(key){
   seedHistory();
   renderLeftSidebar();
   renderAll();
+  if(state.challenge.enabled) setTimeout(startChallenge, 200);
 }
 
 function fmtClock(totalSeconds){
@@ -1529,6 +1573,7 @@ function administerMed(id){
   const med = MEDICATIONS.find(m=>m.id===id);
   if(!med || !state.scenario) return;
   med.apply(state);
+  if(state.challenge.active && !state.challenge.medsGiven.includes(id)) state.challenge.medsGiven.push(id);
 
   const lastT = history.length ? history[history.length-1].time : 0;
   const newT = lastT + 30;
@@ -1659,6 +1704,7 @@ function wireVentControls(){
     document.getElementById("btnExtubate").onclick = () => { state.intubated = false; logMsg("Patient extubated."); card.innerHTML = renderVentControlsInner(); wireVentControls(); updateLiveTail(); };
   }
   document.getElementById("btnResetVent").onclick = () => {
+    if(state.challenge.active) cancelChallenge();
     const s = SCENARIOS[state.scenarioKey];
     state.scenario = { ...s, mech: { ...s.mech }, vent: { ...s.vent } };
     state.intubated = s.intubated;
@@ -1778,20 +1824,23 @@ function renderAIDR(g){
   if(spO2<95) issues.push(spO2<88?`⚠ SpO₂ ${fmtNum(spO2,0)}% — Critical`:`SpO₂ ${fmtNum(spO2,0)}% — Low`);
   if(pf<300) issues.push(pf<200?`⚠ P/F ${fmtNum(pf,0)} — Moderate/Severe ARDS`:`P/F ${fmtNum(pf,0)} — Gas exchange impaired`);
   if(pco2>45) issues.push(pco2>55?`⚠ PaCO₂ ${fmtNum(pco2,0)} — Hypercapnic failure`:`PaCO₂ ${fmtNum(pco2,0)} — Hypoventilation`);
+  if(pco2<35) issues.push(pco2<25?`⚠ PaCO₂ ${fmtNum(pco2,0)} — Severe hyperventilation`:`PaCO₂ ${fmtNum(pco2,0)} — Hyperventilation`);
   if(rr>25) issues.push(`RR ${fmtNum(rr,0)} — Tachypnea, assess fatigue`);
   if(pH<7.35) issues.push(pH<7.25?`⚠ pH ${fmtNum(pH,2)} — Severe acidemia`:`pH ${fmtNum(pH,2)} — Acidemia`);
+  if(pH>7.45) issues.push(pH>7.55?`⚠ pH ${fmtNum(pH,2)} — Severe alkalemia`:`pH ${fmtNum(pH,2)} — Alkalemia`);
   const assessText = issues.length ? issues.join('<br>') : '✓ No acute abnormalities detected';
 
   const hasOxy = pO2<80||spO2<95||pf<300;
-  const hasVent = pco2>45||pH<7.35;
+  const hasVent = pco2>45||pco2<35||pH<7.35||pH>7.45;
   let interpretText = hasOxy&&hasVent ? 'Combined oxygenation + ventilation failure — highest priority'
     : hasOxy ? 'Oxygenation failure — impaired gas exchange (shunt or V/Q mismatch)'
-    : hasVent ? 'Ventilation failure — CO₂ retention, inadequate alveolar ventilation'
+    : hasVent ? (pH>7.45||pco2<35) ? 'Over-ventilation — CO₂ being cleared faster than the patient needs' : 'Ventilation failure — CO₂ retention, inadequate alveolar ventilation'
     : 'Homeostasis intact — values within acceptable range';
 
   const actions=[];
   if(pf<300||pO2<80){ actions.push('↑ FiO₂ toward SpO₂ target'); actions.push('Apply/optimize PEEP — recruit alveoli'); }
   if(pco2>50||pH<7.30){ actions.push('↑ RR or VT (within 6–8 mL/kg PBW)'); actions.push('Consider NIV/BiPAP or intubation'); }
+  if(pco2<32||pH>7.50){ actions.push('↓ RR or VT — patient is being over-ventilated'); }
   if(pH<7.25||pf<150){ actions.push('🚨 Notify physician STAT — emergency escalation'); }
   if(rr>28) actions.push('Assess for respiratory muscle fatigue');
   if(!actions.length) actions.push('Continue current plan — reassess per protocol');
@@ -1816,9 +1865,14 @@ function renderAIDR(g){
     showAlert(`CRITICAL: ${msgs.join(' · ')} — Escalate immediately`);
   }
   const overall = document.getElementById('overallStatus');
-  if(pf<150||spO2<88||pH<7.25){ overall.className='status-pill pill-critical'; overall.textContent='⚠ Critical'; }
-  else if(hasOxy||hasVent||pH<7.35){ overall.className='status-pill pill-warning'; overall.textContent='⚡ Warning'; }
+  const tier = currentTier(g);
+  if(tier==='Critical'){ overall.className='status-pill pill-critical'; overall.textContent='⚠ Critical'; }
+  else if(tier==='Warning'){ overall.className='status-pill pill-warning'; overall.textContent='⚡ Warning'; }
   else { overall.className='status-pill pill-stable'; overall.textContent='✓ Stable'; }
+
+  if(state.challenge.active && tier==='Stable'){
+    endChallenge('success', g);
+  }
 }
 
 function showAlert(msg){ const b=document.getElementById('alertBanner'); document.getElementById('alertText').textContent=msg; b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),7000); }
@@ -1985,6 +2039,7 @@ function initTopbar(){
   const sel = document.getElementById("caseSelect");
   sel.innerHTML = `<option value="">— Choose a case —</option>` +
     Object.entries(SCENARIOS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("");
+  document.getElementById("challengeToggle").onclick = toggleChallengeMode;
 
   document.querySelectorAll(".tf-btn[data-speed]").forEach(btn=>{
     btn.onclick = () => {
@@ -2152,6 +2207,155 @@ buildChartGrid();
 initTopbar();
 renderLeftSidebar();
 renderRightSidebar(null);
+/* =====================================================================
+   TIMED CHALLENGE MODE
+   ===================================================================== */
+function currentTier(g){
+  const hasOxy = g.pao2<80||g.spo2<95||g.pf<300;
+  const hasVent = g.paco2>45||g.paco2<35||g.ph<7.35||g.ph>7.45;
+  if(g.pf<150||g.spo2<88||g.ph<7.25||g.ph>7.55) return 'Critical';
+  if(hasOxy||hasVent) return 'Warning';
+  return 'Stable';
+}
+
+function toggleChallengeMode(){
+  state.challenge.enabled = !state.challenge.enabled;
+  const btn = document.getElementById("challengeToggle");
+  btn.className = "challenge-pill " + (state.challenge.enabled ? "on" : "off");
+  btn.textContent = "🎯 Timed Challenge: " + (state.challenge.enabled ? "On" : "Off");
+  if(state.challenge.enabled && state.scenario){
+    startChallenge();
+  } else if(!state.challenge.enabled && state.challenge.active){
+    cancelChallenge();
+  }
+}
+
+function startChallenge(){
+  if(!state.scenario || !history.length) return;
+  const g = history[history.length-1];
+  const tier = currentTier(g);
+  if(tier === 'Stable'){
+    logMsg("⚠ Patient is already stable — drag a Lung Mechanics slider to make the case more severe before starting a timed challenge.");
+    return;
+  }
+  const timeLimit = tier === 'Critical' ? 150 : 240;
+  state.challenge.active = true;
+  state.challenge.timeLimit = timeLimit;
+  state.challenge.timeLeft = timeLimit;
+  state.challenge.medsGiven = [];
+  state.challenge.startLogLen = state.log.length;
+  state.challenge.startTier = tier;
+  document.getElementById("timerPill").style.display = "inline-block";
+  updateTimerPill();
+  logMsg(`🎯 Timed challenge started — stabilize the patient (reach ✓ Stable) within ${Math.floor(timeLimit/60)}:${String(timeLimit%60).padStart(2,'0')}.`);
+  if(state.challenge.timerId) clearInterval(state.challenge.timerId);
+  state.challenge.timerId = setInterval(()=>{
+    state.challenge.timeLeft -= 1;
+    updateTimerPill();
+    if(state.challenge.timeLeft <= 0){
+      const frame = history[history.length-1];
+      endChallenge('fail', frame);
+    }
+  }, 1000);
+}
+
+function cancelChallenge(){
+  if(state.challenge.timerId) clearInterval(state.challenge.timerId);
+  state.challenge.active = false;
+  state.challenge.timerId = null;
+  document.getElementById("timerPill").style.display = "none";
+}
+
+function updateTimerPill(){
+  const pill = document.getElementById("timerPill");
+  const t = Math.max(0, state.challenge.timeLeft);
+  const m = Math.floor(t/60), s = t%60;
+  pill.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  const frac = t / state.challenge.timeLimit;
+  pill.className = "timer-pill " + (frac > 0.5 ? "t-safe" : frac > 0.2 ? "t-warn" : "t-crit");
+}
+
+function endChallenge(outcome, g){
+  if(!state.challenge.active) return;
+  if(state.challenge.timerId) clearInterval(state.challenge.timerId);
+  state.challenge.active = false;
+  state.challenge.timerId = null;
+  document.getElementById("timerPill").style.display = "none";
+  logMsg(outcome === 'success' ? "🎯 Challenge complete — patient stabilized in time." : "🎯 Challenge failed — time expired before the patient stabilized.");
+  if(outcome === 'success') showSuccessReport(g); else showPostMortem(g);
+}
+
+function showSuccessReport(g){
+  const timeUsed = state.challenge.timeLimit - Math.max(0,state.challenge.timeLeft);
+  const box = document.getElementById("challengeModalBox");
+  box.innerHTML = `
+    <div class="modal-hd success"><h2>✓ Patient Stabilized</h2><p>${state.scenario.name} — stabilized with ${fmtClock(state.challenge.timeLeft*0)===''?'':''}${Math.max(0,state.challenge.timeLeft)}s remaining (used ${timeUsed}s of ${state.challenge.timeLimit}s)</p></div>
+    <div class="modal-body">
+      <div class="pm-section"><h3>Final Vitals</h3><div class="pm-vitals">${pmVitalsGrid(g)}</div></div>
+      <div class="pm-section"><h3>What You Did</h3><div class="pm-timeline">${pmTimeline()}</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="pmRetry" style="background:#0d2a1a;border:1px solid #22c55e;color:#4ade80;">Run It Again</button>
+      <button class="btn-primary" id="pmClose" style="background:#0d1520;border:1px solid var(--border);color:var(--text2);">Close</button>
+    </div>`;
+  document.getElementById("challengeModal").classList.add("show");
+  document.getElementById("pmClose").onclick = () => document.getElementById("challengeModal").classList.remove("show");
+  document.getElementById("pmRetry").onclick = () => { document.getElementById("challengeModal").classList.remove("show"); loadScenario(state.scenarioKey); setTimeout(startChallenge, 300); };
+}
+
+function pmVitalsGrid(g){
+  const rows = [
+    {k:'pH', v:g.ph.toFixed(2), ok: g.ph>=7.35&&g.ph<=7.45},
+    {k:'PaCO₂', v:Math.round(g.paco2)+' mmHg', ok: g.paco2>=35&&g.paco2<=45},
+    {k:'PaO₂', v:Math.round(g.pao2)+' mmHg', ok: g.pao2>=80&&g.pao2<=140},
+    {k:'HCO₃⁻', v:g.hco3.toFixed(1)+' mEq/L', ok: g.hco3>=22&&g.hco3<=26},
+    {k:'SpO₂', v:Math.round(g.spo2)+'%', ok: g.spo2>=95},
+    {k:'P/F Ratio', v:Math.round(g.pf), ok: g.pf>=300},
+  ];
+  return rows.map(r=>`<div class="pm-vital"><div class="k">${r.k}</div><div class="v" style="color:${r.ok?'#4ade80':'#f87171'}">${r.v}</div></div>`).join('');
+}
+
+function pmTimeline(){
+  const slice = state.log.slice(0, Math.max(0, state.log.length - state.challenge.startLogLen));
+  if(!slice.length) return `<div class="logline">No actions were recorded during the attempt.</div>`;
+  return slice.slice().reverse().map(l=>`<div class="logline"><b>${l.t}</b> — ${l.msg}</div>`).join('');
+}
+
+function showPostMortem(g){
+  const s = state.scenario;
+  const fixes = [];
+  if(g.pf<300||g.pao2<80) fixes.push(`<div class="pm-fix"><b>Oxygenation was still low</b> (P/F ${Math.round(g.pf)}, PaO₂ ${Math.round(g.pao2)} mmHg). Try increasing FiO₂ and/or PEEP earlier — or intubating sooner if the case allows it — to give recruitment more time to work before the clock runs out.</div>`);
+  if(g.paco2>45||g.ph<7.35) fixes.push(`<div class="pm-fix"><b>Ventilation was still inadequate</b> (PaCO₂ ${Math.round(g.paco2)} mmHg, pH ${g.ph.toFixed(2)}). Increasing RR or VT (within a lung-protective range) moves CO₂ faster than waiting — and for obstructive cases, cutting airway resistance with a bronchodilator has a real effect on this model's numbers, not just a cosmetic one.</div>`);
+  if(g.paco2<35||g.ph>7.45) fixes.push(`<div class="pm-fix"><b>The patient ended up over-ventilated</b> (PaCO₂ ${Math.round(g.paco2)} mmHg, pH ${g.ph.toFixed(2)}). A big RR/VT jump — or a drive-restoring medication like naloxone on top of an already-adequate rate — can overshoot into alkalemia just as easily as undertreating overshoots into acidemia. Dial the rate/volume back down toward normal rather than maximizing them.</div>`);
+  if(g.spo2<95 && g.pao2>=80) fixes.push(`<div class="pm-fix"><b>SpO₂ was lagging PaO₂</b> — double check the oxyhemoglobin curve isn't being shifted by a low Hb; the Formula Engine's CaO₂ number reflects total oxygen delivery, not just PaO₂.</div>`);
+  if(!fixes.length) fixes.push(`<div class="pm-fix">Vitals were close to target — the clock likely ran out just before the model caught up. Try making your first move (biggest lever: FiO₂/PEEP for oxygenation, RR/VT or a bronchodilator for ventilation) within the first 30 seconds next time.</div>`);
+
+  const givenSet = new Set(state.challenge.medsGiven);
+  const missedMeds = MEDICATIONS.filter(m => m.indicated.includes(state.scenarioKey) && !givenSet.has(m.id));
+  const medsHtml = missedMeds.length
+    ? missedMeds.map(m=>`<div class="pm-med-missed"><b>${m.name}</b> (${m.cls}) — ${m.teach}</div>`).join('')
+    : `<div class="pm-med-missed">You gave every medication indicated for this case — the gap was in vent/mechanics management, not pharmacology.</div>`;
+
+  const box = document.getElementById("challengeModalBox");
+  box.innerHTML = `
+    <div class="modal-hd fail"><h2>✗ Time Expired</h2><p>${s.name} — patient did not reach a stable status within ${state.challenge.timeLimit}s</p></div>
+    <div class="modal-body">
+      <div class="pm-section"><h3>Vitals at Time of Failure</h3><div class="pm-vitals">${pmVitalsGrid(g)}</div></div>
+      <div class="pm-section"><h3>What You Could Have Done</h3>${fixes.join('')}</div>
+      <div class="pm-section"><h3>Indicated Treatments Not Given</h3>${medsHtml}</div>
+      <div class="pm-section"><h3>Case Teaching Point</h3><div class="pm-fix">${s.teach}</div></div>
+      <div class="pm-section"><h3>Your Action Timeline</h3><div class="pm-timeline">${pmTimeline()}</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="pmRetry" style="background:#3a1010;border:1px solid #ef4444;color:#f87171;">Try Again</button>
+      <button class="btn-primary" id="pmClose" style="background:#0d1520;border:1px solid var(--border);color:var(--text2);">Review Case (No Timer)</button>
+    </div>`;
+  document.getElementById("challengeModal").classList.add("show");
+  document.getElementById("pmClose").onclick = () => document.getElementById("challengeModal").classList.remove("show");
+  document.getElementById("pmRetry").onclick = () => { document.getElementById("challengeModal").classList.remove("show"); loadScenario(state.scenarioKey); setTimeout(startChallenge, 300); };
+}
+
+
 renderQuizTab();
 renderABGTrainTab();
 renderLog();
